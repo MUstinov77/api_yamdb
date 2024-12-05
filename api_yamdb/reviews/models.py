@@ -5,7 +5,6 @@ from django.core.validators import (
     validate_slug
 )
 from django.db import models
-
 from .validators import UsernameRegexValidator, username_me, validate_year
 
 
@@ -14,10 +13,12 @@ LENG_MAX = 256
 LENG_DATA_USER = 150
 LENG_EMAIL = 254
 LENG_CUT = 30
+MIN_SCORE = 1
+MAX_SCORE = 10
 
 
-class GenreAndCategoryModel(models.Model):
-    """Добавляет слаг и название."""
+class BaseGenreAndCategoryModel(models.Model):
+    """Добавляет уникальный slug и название."""
 
     slug = models.SlugField(
         'Slug',
@@ -32,26 +33,31 @@ class GenreAndCategoryModel(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ('name', )
+        ordering = ('name',)
 
     def __str__(self):
         return self.name[:LENG_CUT]
 
 
-class ReviewAndCommentModel(models.Model):
-    """Добавляет текст, автора и дату публикации."""
+class BaseAuthorModel(models.Model):
+    """
+    Абстрактная модель.
+
+    Базовая модель с автором (author), текстом (text) и
+    датой публикации (pub_date).
+    """
 
     text = models.CharField(
-        'Текст отзыва',
+        'Текст',
         max_length=LENG_MAX
     )
     author = models.ForeignKey(
         'User',
         on_delete=models.CASCADE,
-        verbose_name='Пользователь'
+        verbose_name='Автор'
     )
     pub_date = models.DateTimeField(
-        'Дата публикации отзыва',
+        'Дата и время публикации',
         auto_now_add=True,
     )
 
@@ -82,7 +88,8 @@ class User(AbstractUser):
         unique=True,
         blank=False,
         null=False,
-        help_text=f'Набор символов не более {LENG_DATA_USER}.Только буквы, цифры и @/./+/-/_',
+        help_text=f'Набор символов не более {LENG_DATA_USER}.'
+        'Только буквы, цифры и @/./+/-/_',
         error_messages={
             'unique': "Пользователь с таким именем уже существует!",
         },
@@ -131,19 +138,19 @@ class User(AbstractUser):
         return f'{self.username} {self.email} {self.role}'
 
 
-class Category(GenreAndCategoryModel):
+class Category(BaseGenreAndCategoryModel):
     """Модель категории произведения."""
 
-    class Meta(GenreAndCategoryModel.Meta):
+    class Meta(BaseGenreAndCategoryModel.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
         default_related_name = 'categories'
 
 
-class Genre(GenreAndCategoryModel):
+class Genre(BaseGenreAndCategoryModel):
     """Модель жанра произведений."""
 
-    class Meta(GenreAndCategoryModel.Meta):
+    class Meta(BaseGenreAndCategoryModel.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
         default_related_name = 'genres'
@@ -189,7 +196,7 @@ class Title(models.Model):
         return self.name
 
 
-class Review(ReviewAndCommentModel):
+class Review(BaseAuthorModel):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -199,16 +206,16 @@ class Review(ReviewAndCommentModel):
         'Оценка',
         db_index=True,
         validators=(
-            MinValueValidator(1),
-            MaxValueValidator(10)
+            MinValueValidator(MIN_SCORE),
+            MaxValueValidator(MAX_SCORE)
         ),
         error_messages={
-            'validators': 'Оценка от 1 до 10!'
+            'validators': f'Оценка от {MIN_SCORE} до {MAX_SCORE}!'
         },
         default=1
     )
 
-    class Meta(ReviewAndCommentModel.Meta):
+    class Meta(BaseAuthorModel.Meta):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         default_related_name = 'reviews'
@@ -220,7 +227,7 @@ class Review(ReviewAndCommentModel):
         ]
 
 
-class Comment(ReviewAndCommentModel):
+class Comment(BaseAuthorModel):
     """Модель комментария к отзыву."""
 
     review = models.ForeignKey(
@@ -229,7 +236,7 @@ class Comment(ReviewAndCommentModel):
         verbose_name='Отзыв'
     )
 
-    class Meta(ReviewAndCommentModel.Meta):
+    class Meta(BaseAuthorModel.Meta):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
         default_related_name = 'comments'
