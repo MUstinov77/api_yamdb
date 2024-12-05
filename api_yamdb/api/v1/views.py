@@ -1,3 +1,4 @@
+from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import (
     CreateModelMixin, ListModelMixin, UpdateModelMixin,
@@ -25,8 +26,9 @@ class UserViewSet(
         model = User
 
 
-
 class JWTView(TokenObtainPairView):
     serializer_class = JWTSerializer
 
 
+class UserSignUpView(APIView):
+    pass

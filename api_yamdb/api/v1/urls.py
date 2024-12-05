@@ -3,13 +3,13 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView
 )
-from .views import JWTView, UserViewSet
+from api.v1 import views
 
 router_v1 = DefaultRouter()
 
 router_v1.register(
     'users',
-    UserViewSet,
+    views.UserViewSet,
     basename='users'
 )
 
@@ -18,13 +18,13 @@ router_v1.register(
 auth_urls = [
     path(
         'signup/',
-        ...,
+        views.UserSignUpView.as_view(),
         name='signup'
     ),
     path(
         'token/',
-        JWTView.as_view(),
-        name='token_obtain_pair'
+        views.JWTView.as_view(),
+        name='token'
     )
 ]
 
