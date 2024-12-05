@@ -15,3 +15,6 @@ USER_ROLES = {
     'admin': 'admin',
     'moderator': 'moderator'
 }
+
+# Тема письма при отправки токена
+subject = 'Код для подтверждения регистрации на api_yamdb'

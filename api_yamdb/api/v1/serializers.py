@@ -1,26 +1,11 @@
-from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.serializers import ModelSerializer, Serializer, CharField
 
+from core.constants import MAX_LENGTH_USERNAME
 from users.models import User
 
 
-class UserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = (
-            'username',
-            'email',
-        )
-
-
-class UserCreateSerializer(serializers.ModelSerializer):
-
-    def create(self, validated_data):
-        return User.objects.create(
-            username=validated_data.get('username'),
-            email=validated_data.get('email')
-        )
+class SignUpSerializer(ModelSerializer):
+    """Cериализатор для обработки данных нового пользователя."""
 
     class Meta:
         model = User
@@ -30,11 +15,13 @@ class UserCreateSerializer(serializers.ModelSerializer):
         )
 
 
+class GetTokenSerializer(Serializer):
+    """Сериализатор получения токена."""
 
-
-class JWTSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        data['username'] = self.user.username
-        data['email'] = self.user.email
-        return data
+    username = CharField(
+        max_length=MAX_LENGTH_USERNAME,
+        required=True
+    )
+    confirmation_code = CharField(
+        required=True
+    )

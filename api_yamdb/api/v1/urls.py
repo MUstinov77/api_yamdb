@@ -1,29 +1,18 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView
-)
 from api.v1 import views
 
 router_v1 = DefaultRouter()
 
-router_v1.register(
-    'users',
-    views.UserViewSet,
-    basename='users'
-)
-
-
-
 auth_urls = [
     path(
         'signup/',
-        views.UserSignUpView.as_view(),
+        views.SignUpView.as_view(),
         name='signup'
     ),
     path(
         'token/',
-        views.JWTView.as_view(),
+        views.GetTokenView.as_view(),
         name='token'
     )
 ]
