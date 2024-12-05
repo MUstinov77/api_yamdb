@@ -1,21 +1,32 @@
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import (
-    CreateModelMixin,
+    CreateModelMixin, ListModelMixin, UpdateModelMixin,
 )
 from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.tokens import AccessToken
-
-from users.models import CommonUser
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 
+from users.models import User
+from .serializers import (
+    UserSerializer,
+    JWTSerializer
+)
 
-class UserCreateView(
+
+class UserViewSet(
     GenericViewSet,
-    CreateModelMixin
+    ListModelMixin,
 ):
-    queryset = CommonUser.objects.all()
-    serializer_class = ...
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     permission_classes = [AllowAny,]
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer
+    class Meta:
+        model = User
+
+
+
+class JWTView(TokenObtainPairView):
+    serializer_class = JWTSerializer
+
+

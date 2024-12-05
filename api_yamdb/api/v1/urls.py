@@ -3,8 +3,17 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView
 )
+from .views import JWTView, UserViewSet
 
-v1_router = DefaultRouter()
+router_v1 = DefaultRouter()
+
+router_v1.register(
+    'users',
+    UserViewSet,
+    basename='users'
+)
+
+
 
 auth_urls = [
     path(
@@ -14,7 +23,7 @@ auth_urls = [
     ),
     path(
         'token/',
-        TokenObtainPairView.as_view(),
+        JWTView.as_view(),
         name='token_obtain_pair'
     )
 ]

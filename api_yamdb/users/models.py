@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
-class CommonUser(AbstractUser):
+class User(AbstractUser):
     username = models.CharField(
         verbose_name='Никнейм',
         max_length=50,
