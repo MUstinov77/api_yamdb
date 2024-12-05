@@ -1,24 +1,27 @@
-from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
     validate_slug
 )
 from django.db import models
-from .validators import UsernameRegexValidator, username_me, validate_year
 
-
-LENG_SLUG = 50
-LENG_MAX = 256
-LENG_DATA_USER = 150
-LENG_EMAIL = 254
-LENG_CUT = 30
-MIN_SCORE = 1
-MAX_SCORE = 10
+from reviews.validators import validate_year
+from core.constants import (
+    LENG_SLUG,
+    LENG_MAX,
+    LENG_CUT,
+    MIN_SCORE,
+    MAX_SCORE
+)
+from users.models import User
 
 
 class BaseGenreAndCategoryModel(models.Model):
-    """Добавляет уникальный slug и название."""
+    """
+    Абстрактная модель.
+
+    Добавляет уникальный slug и название.
+    """
 
     slug = models.SlugField(
         'Slug',
@@ -52,7 +55,7 @@ class BaseAuthorModel(models.Model):
         max_length=LENG_MAX
     )
     author = models.ForeignKey(
-        'User',
+        User,
         on_delete=models.CASCADE,
         verbose_name='Автор'
     )
@@ -69,75 +72,6 @@ class BaseAuthorModel(models.Model):
         return self.text[:LENG_CUT]
 
 
-class User(AbstractUser):
-
-    USER = 'user'
-    ADMIN = 'admin'
-    MODERATOR = 'moderator'
-
-    ROLE_CHOICES = (
-        (USER, 'Пользователь'),
-        (ADMIN, 'Администратор'),
-        (MODERATOR, 'Модератор'),
-    )
-
-    username = models.CharField(
-        'Имя пользователя',
-        validators=(UsernameRegexValidator(), username_me),
-        max_length=LENG_DATA_USER,
-        unique=True,
-        blank=False,
-        null=False,
-        help_text=f'Набор символов не более {LENG_DATA_USER}.'
-        'Только буквы, цифры и @/./+/-/_',
-        error_messages={
-            'unique': "Пользователь с таким именем уже существует!",
-        },
-    )
-    email = models.EmailField(
-        'Электронная почта',
-        max_length=LENG_EMAIL,
-        unique=True,
-        blank=False,
-        null=False
-    )
-    role = models.CharField(
-        'Роль',
-        max_length=max(len(role) for role, _ in ROLE_CHOICES),
-        choices=ROLE_CHOICES,
-        default=USER,
-        blank=True
-    )
-    bio = models.TextField(
-        'Биография',
-        blank=True,
-    )
-
-    REQUIRED_FIELDS = ('email', )
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['username', 'email'],
-                name='unique_username_email',
-            )
-        ]
-
-    @property
-    def is_moderator(self):
-        return self.role == self.MODERATOR
-
-    @property
-    def is_admin(self):
-        return self.role == self.ADMIN or self.is_superuser or self.is_staff
-
-    def __str__(self):
-        return f'{self.username} {self.email} {self.role}'
-
-
 class Category(BaseGenreAndCategoryModel):
     """Модель категории произведения."""
 
@@ -145,6 +79,9 @@ class Category(BaseGenreAndCategoryModel):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
         default_related_name = 'categories'
+
+    def __str__(self):
+        return self.name
 
 
 class Genre(BaseGenreAndCategoryModel):
@@ -154,6 +91,9 @@ class Genre(BaseGenreAndCategoryModel):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
         default_related_name = 'genres'
+
+    def __str__(self):
+        return self.name
 
 
 class Title(models.Model):
@@ -197,6 +137,8 @@ class Title(models.Model):
 
 
 class Review(BaseAuthorModel):
+    """Модель отзыва произведения."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
