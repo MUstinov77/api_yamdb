@@ -3,6 +3,7 @@ from rest_framework.serializers import (
     Serializer,
     CharField,
     ValidationError,
+RegexField
 )
 
 from core.constants import MAX_LENGTH_USERNAME
@@ -35,6 +36,25 @@ class SignUpSerializer(ModelSerializer):
         return attrs
 
 
+class UserSerializer(ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'bio',
+            'role'
+        )
+
+    def validate_username(self, username):
+        if username == 'me':
+            return ValidationError(
+                'Это имя использовать запрещено!'
+            )
+        return username
+
+
 
 class GetTokenSerializer(Serializer):
     """Сериализатор получения токена."""
@@ -46,3 +66,5 @@ class GetTokenSerializer(Serializer):
     confirmation_code = CharField(
         required=True
     )
+
+
