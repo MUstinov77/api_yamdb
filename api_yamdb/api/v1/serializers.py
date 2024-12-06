@@ -1,4 +1,9 @@
-from rest_framework.serializers import ModelSerializer, Serializer, CharField
+from rest_framework.serializers import (
+    ModelSerializer,
+    Serializer,
+    CharField,
+    ValidationError,
+)
 
 from core.constants import MAX_LENGTH_USERNAME
 from users.models import User
@@ -13,6 +18,22 @@ class SignUpSerializer(ModelSerializer):
             'username',
             'email'
         )
+
+    def validate(self, attrs):
+        if attrs.get('username') == 'me':
+            return ValidationError(
+                'Этот ник нежелателен! Пожалуйста придумайте другой.'
+            )
+        elif User.objects.get(username=attrs.get('username')):
+            return ValidationError(
+                'Этот ник уже занят!'
+            )
+        elif User.objects.get(email=attrs.get('email')):
+            return ValidationError(
+                'Пользователь с таким email уже существует!'
+            )
+        return attrs
+
 
 
 class GetTokenSerializer(Serializer):
