@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
 from api.v1.serializers import (
@@ -12,6 +13,21 @@ from api.v1.serializers import (
     GetTokenSerializer
 )
 from core.constants import subject
+from reviews.models import (
+    Category,
+    Genre,
+    Title,
+    Review,
+    Comment
+)
+from api.v1.serializers import (
+    CategorySerializer,
+    GenreSerializer,
+    TitleSerializer,
+    ReviewSerializer,
+    CommentSerializer,
+    UserSerializer
+)
 from users.models import User
 
 
@@ -44,7 +60,7 @@ class SignUpView(APIView):
                     )
                 return Response(
                     serializer.data,
-                    status=status.HTTP_201_CREATED
+                    status=status.HTTP_200_OK
                 )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -92,3 +108,84 @@ class GetTokenView(APIView):
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GenreViewSet(ModelViewSet):
+    """
+    Управление жанрами.
+
+    Позволяет просматривать, создавать и удалять жанры для администрации,
+    а для обычных пользователей доступен только GET-запрос.
+    """
+
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
+
+class CategoriesViewSet(ModelViewSet):
+    """
+    Управление категориями.
+
+    Позволяет просматривать, создавать и удалять категории для администрации,
+    а для обычных пользователей доступен только GET-запрос.
+    """
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class TitleViewSet(ModelViewSet):
+    """
+    Управление произведениями.
+    """
+
+    # Поля genre и category отправляются не словарём.
+    # Нет поля rating
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+
+
+class ReviewViewSet(ModelViewSet):
+    """
+    Управление отзывами.
+    """
+
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        return Review.objects.filter(title__id=title_id)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class CommentViewSet(ModelViewSet):
+    """
+    Управление комментариями.
+    """
+
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        return Comment.objects.filter(
+            review__id=review_id, review__title__id=title_id
+        )
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class UserViewSet(ModelViewSet):
+    """
+    Управление пользователями.
+    """
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
