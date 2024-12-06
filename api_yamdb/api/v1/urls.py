@@ -21,13 +21,11 @@ router_v1.register(
     views.TitleViewSet,
     basename='titles'
 )
-# Нужен пагинатор
 router_v1.register(
     reviews_url,
     views.ReviewViewSet,
     basename='reviews'
 )
-# Нужен пагинатор
 router_v1.register(
     comments_url,
     views.CommentViewSet,
