@@ -3,7 +3,9 @@ from rest_framework.serializers import (
     Serializer,
     CharField,
     ValidationError,
-RegexField
+    RegexField,
+    DateTimeField,
+    IntegerField
 )
 
 from core.constants import MAX_LENGTH_USERNAME
@@ -50,6 +52,8 @@ class UserSerializer(ModelSerializer):
         fields = (
             'username',
             'email',
+            'first_name',
+            'last_name',
             'bio',
             'role'
         )
@@ -60,7 +64,6 @@ class UserSerializer(ModelSerializer):
                 'Это имя использовать запрещено!'
             )
         return username
-
 
 
 class GetTokenSerializer(Serializer):
@@ -75,3 +78,49 @@ class GetTokenSerializer(Serializer):
     )
 
 
+class CategorySerializer(ModelSerializer):
+    """Сериализатор категории."""
+
+    class Meta:
+        model = Category
+        exclude = ('id',)
+
+
+class GenreSerializer(ModelSerializer):
+    """Сериализатор жанра."""
+
+    class Meta:
+        model = Genre
+        exclude = ('id',)
+
+
+class TitleSerializer(ModelSerializer):
+    """Сериализатор произведения."""
+
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
+    rating = IntegerField(read_only=True)
+    
+    class Meta:
+        model = Title
+        fields = '__all__'
+
+
+class ReviewSerializer(ModelSerializer):
+    """Сериализатор отзыва."""
+
+    pub_date = DateTimeField(format='%Y-%m-%dT%H:%M:%SZ')
+
+    class Meta:
+        model = Review
+        exclude = ('title',)
+
+
+class CommentSerializer(ModelSerializer):
+    """Сериализатор комментария."""
+
+    pub_date = DateTimeField(format='%Y-%m-%dT%H:%M:%SZ')
+
+    class Meta:
+        model = Comment
+        exclude = ('review',)

@@ -1,6 +1,7 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db import transaction
+from django.db.models import Avg
 from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
@@ -177,9 +178,10 @@ class TitleViewSet(ModelViewSet):
     Управление произведениями.
     """
 
-    # Поля genre и category отправляются не словарём.
-    # Нет поля rating
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(
+        # Добавляет в поле rating ср. арифм. всех отзывов
+        rating=Avg('reviews__score')
+    ).order_by('id')
     serializer_class = TitleSerializer
 
 
@@ -192,10 +194,14 @@ class ReviewViewSet(ModelViewSet):
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
-        return Review.objects.filter(title__id=title_id)
+        return Review.objects.filter(title__id=title_id).order_by('id')
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -212,10 +218,14 @@ class CommentViewSet(ModelViewSet):
         review_id = self.kwargs.get('review_id')
         return Comment.objects.filter(
             review__id=review_id, review__title__id=title_id
-        )
+        ).order_by('id')
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
