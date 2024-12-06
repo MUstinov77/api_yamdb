@@ -2,15 +2,22 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db import transaction
 from rest_framework import status
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework import mixins, viewsets
 
+from api.v1.permissions import (
+    IsSuperUserOrAdmin,
+)
 from api.v1.serializers import (
     SignUpSerializer,
-    GetTokenSerializer
+    GetTokenSerializer,
+    UserSerializer
 )
 from core.constants import subject
 from reviews.models import (
@@ -74,6 +81,37 @@ class SignUpView(APIView):
             from_email=None,
             recipient_list=[email]
         )
+
+
+class UserViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    filter_backends = [SearchFilter,]
+    search_fields = ('username',)
+    permission_classes = (
+        IsAuthenticated,
+        IsSuperUserOrAdmin
+    )
+
+    def get_user(self, request):
+        serializer = UserSerializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
+
+
+
 
 
 class GetTokenView(APIView):

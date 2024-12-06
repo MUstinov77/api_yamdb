@@ -35,6 +35,10 @@ class User(AbstractUser):
         choices=roles,
         default='user'
     )
+    bio = models.TextField(
+        verbose_name='Bio',
+        blank=True,
+    )
 
     class Meta:
         verbose_name = 'Пользователь'
