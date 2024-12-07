@@ -50,14 +50,14 @@ class BaseAuthorModel(models.Model):
     датой публикации (pub_date).
     """
 
-    text = models.CharField(
-        'Текст',
-        max_length=LENG_MAX
-    )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор'
+    )
+    text = models.CharField(
+        'Текст',
+        max_length=LENG_MAX
     )
     pub_date = models.DateTimeField(
         'Дата и время публикации',
@@ -99,11 +99,15 @@ class Genre(BaseGenreAndCategoryModel):
 class Title(models.Model):
     """Модель произведения."""
 
-    category = models.ForeignKey(
-        Category,
-        verbose_name='Категория',
-        on_delete=models.PROTECT,
-        related_name='titles',
+    name = models.CharField(
+        'Название',
+        max_length=LENG_MAX,
+        db_index=True,
+    )
+    year = models.PositiveSmallIntegerField(
+        'Год выпуска',
+        db_index=True,
+        validators=(validate_year,),
     )
     description = models.TextField(
         'Описание',
@@ -116,15 +120,11 @@ class Title(models.Model):
         verbose_name='Жанр',
         related_name='titles',
     )
-    name = models.CharField(
-        'Название',
-        max_length=LENG_MAX,
-        db_index=True,
-    )
-    year = models.PositiveSmallIntegerField(
-        'Год выпуска',
-        db_index=True,
-        validators=(validate_year,),
+    category = models.ForeignKey(
+        Category,
+        verbose_name='Категория',
+        on_delete=models.PROTECT,
+        related_name='titles',
     )
 
     class Meta:
@@ -153,7 +153,7 @@ class Review(BaseAuthorModel):
         error_messages={
             'validators': f'Оценка от {MIN_SCORE} до {MAX_SCORE}!'
         },
-        default=1
+        default=1,
     )
 
     class Meta(BaseAuthorModel.Meta):

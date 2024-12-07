@@ -127,11 +127,10 @@ SIMPLE_JWT = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Желательно оставить на локальном носителе
+EMAIL_FILE_PATH = BASE_DIR / "sent_emails"
 EMAIL_HOST_PASSWORD = 'ywpsmbmwbmmqlrxf'
 EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_PORT = 465
-# Можно настроить другую почту, но тогда и пароль нужно менять
 EMAIL_HOST_USER = 'seno.star@yandex.ru'
 EMAIL_USE_SSL = True
 
