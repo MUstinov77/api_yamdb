@@ -1,10 +1,12 @@
+from rest_framework.generics import get_object_or_404
 from rest_framework.serializers import (
     ModelSerializer,
     CharField,
     ValidationError,
     RegexField,
     DateTimeField,
-    IntegerField
+    IntegerField,
+    SlugRelatedField
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -31,19 +33,18 @@ class UserCreateSerializer(ModelSerializer):
 
     def validate(self, attrs):
         if attrs.get('username') == 'me':
-            return ValidationError(
+            raise ValidationError(
                 'Этот ник нежелателен! Пожалуйста придумайте другой.'
             )
         elif User.objects.filter(username=attrs.get('username')):
-            return ValidationError(
+            raise ValidationError(
                 'Этот ник уже занят!'
             )
         elif User.objects.filter(email=attrs.get('email')):
-            return ValidationError(
+            raise ValidationError(
                 'Пользователь с таким email уже существует!'
             )
         return attrs
-
 
 
 class UserSerializer(ModelSerializer):
@@ -102,31 +103,69 @@ class GenreSerializer(ModelSerializer):
 
 
 class TitleSerializer(ModelSerializer):
-    """Сериализатор произведения."""
+    """Базовый сериализатор произведения."""
 
-    category = CategorySerializer()
-    genre = GenreSerializer(many=True)
-    rating = IntegerField(read_only=True)
-    
     class Meta:
         model = Title
         fields = '__all__'
 
 
+class TitleGetSerializer(TitleSerializer):
+    """Сериализатор для получения произведений."""
+
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
+    rating = IntegerField(read_only=True)
+
+
+class TitleEditSerializer(TitleSerializer):
+    """Сериализатор для изменения произведений."""
+
+    category = SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field="slug",
+    )
+    genre = SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field="slug",
+        many=True,
+    )
+
+
 class ReviewSerializer(ModelSerializer):
     """Сериализатор отзыва."""
 
-    pub_date = DateTimeField(format='%Y-%m-%dT%H:%M:%SZ')
+    author = SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+    pub_date = DateTimeField(format='%Y-%m-%dT%H:%M:%SZ', read_only=True)
 
     class Meta:
         model = Review
         exclude = ('title',)
 
+    def validate(self, data):
+        request = self.context.get('request')
+        if request.method != 'POST':
+            return data
+        view = self.context.get('view')
+        title = get_object_or_404(
+            Title, pk=view.kwargs.get('title_id')
+        )
+        if title.reviews.filter(author=request.user).exists():
+            raise ValidationError(
+                'Можно оставить только один отзыв для одного произведения!'
+            )
+        return data
+
 
 class CommentSerializer(ModelSerializer):
     """Сериализатор комментария."""
 
-    pub_date = DateTimeField(format='%Y-%m-%dT%H:%M:%SZ')
+    author = SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+    pub_date = DateTimeField(format='%Y-%m-%dT%H:%M:%SZ', read_only=True)
 
     class Meta:
         model = Comment

@@ -1,20 +1,21 @@
 
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
-from rest_framework import status
-from rest_framework.filters import SearchFilter
+from rest_framework import status, permissions, mixins, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
-from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import mixins, viewsets
 
 from api.v1.permissions import (
+    AnonimReadOnly,
     IsSuperUserOrAdmin,
+    IsAuthorModeratorAdminSuperUserOrReadOnly,
 )
 from api.v1.serializers import (
     UserCreateSerializer,
@@ -29,18 +30,9 @@ from reviews.models import (
     Review,
     Comment
 )
-from api.v1.serializers import (
-    CategorySerializer,
-    GenreSerializer,
-    TitleSerializer,
-    ReviewSerializer,
-    CommentSerializer,
-    UserSerializer
-)
+from api.v1 import serializers
 from core.utils import send_confirmation_code
 from users.models import User
-
-
 
 
 class UserCreateViewSet(
@@ -55,7 +47,7 @@ class UserCreateViewSet(
         serializer = UserCreateSerializer(data=request.data)
         if serializer.is_valid():
             user = User.objects.create(**serializer.validated_data)
-            confirmation_code = default_token_generator.make_token(user)
+            confirmation_code = str(AccessToken.for_user(user))
             send_confirmation_code(
                 email=user.email,
                 code=confirmation_code
@@ -68,8 +60,6 @@ class UserCreateViewSet(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-
-
 
 
 class UserViewSet(
@@ -160,7 +150,7 @@ class GenreViewSet(ModelViewSet):
     """
 
     queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
+    serializer_class = serializers.GenreSerializer
 
 
 class CategoriesViewSet(ModelViewSet):
@@ -172,7 +162,7 @@ class CategoriesViewSet(ModelViewSet):
     """
 
     queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+    serializer_class = serializers.CategorySerializer
 
 
 class TitleViewSet(ModelViewSet):
@@ -180,11 +170,19 @@ class TitleViewSet(ModelViewSet):
     Управление произведениями.
     """
 
-    queryset = Title.objects.all().annotate(
-        # Добавляет в поле rating ср. арифм. всех отзывов
-        rating=Avg('reviews__score')
-    ).order_by('id')
-    serializer_class = TitleSerializer
+    # поменять permission
+    permission_classes = (IsAuthorModeratorAdminSuperUserOrReadOnly,)
+
+    def get_queryset(self):
+        return Title.objects.all().annotate(
+            # Добавляет в поле rating ср. арифм. всех отзывов
+            rating=Avg('reviews__score')
+        ).order_by('id')
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return serializers.TitleGetSerializer
+        return serializers.TitleEditSerializer
 
 
 class ReviewViewSet(ModelViewSet):
@@ -192,20 +190,27 @@ class ReviewViewSet(ModelViewSet):
     Управление отзывами.
     """
 
-    serializer_class = ReviewSerializer
+    serializer_class = serializers.ReviewSerializer
+    permission_classes = (IsAuthorModeratorAdminSuperUserOrReadOnly,)
+
+    def get_title(self):
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
-        title_id = self.kwargs.get('title_id')
-        return Review.objects.filter(title__id=title_id).order_by('id')
+        return self.get_title().reviews.all()
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+    def perform_create(self, serializer):
+        if not self.request.user.is_authenticated:
+            raise PermissionDenied("You must be logged in to create a review.")
+        serializer.save(author=self.request.user, title=self.get_title())
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(
+                {'detail': 'Метод "PUT" не разрешен.'},
+                status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
+        return super().update(request, *args, **kwargs)
 
 
 class CommentViewSet(ModelViewSet):
@@ -213,22 +218,22 @@ class CommentViewSet(ModelViewSet):
     Управление комментариями.
     """
 
-    serializer_class = CommentSerializer
+    serializer_class = serializers.CommentSerializer
+    permission_classes = (IsAuthorModeratorAdminSuperUserOrReadOnly,)
+
+    def get_review(self):
+        return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
 
     def get_queryset(self):
-        title_id = self.kwargs.get('title_id')
-        review_id = self.kwargs.get('review_id')
-        return Comment.objects.filter(
-            review__id=review_id, review__title__id=title_id
-        ).order_by('id')
+        return self.get_review().comments.all().select_related('author')
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, review=self.get_review())
 
-
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(
+                {'detail': 'Метод "PUT" не разрешен.'},
+                status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
+        return super().update(request, *args, **kwargs)
