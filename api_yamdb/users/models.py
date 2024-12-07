@@ -33,7 +33,7 @@ class User(AbstractUser):
         verbose_name='Электронная почта',
         unique=True,
         max_length=MAX_LENGTH_EMAIL,
-        validators=[EmailValidator, ]
+        validators=[EmailValidator,]
     )
     role = models.CharField(
         verbose_name='Роль пользователя',

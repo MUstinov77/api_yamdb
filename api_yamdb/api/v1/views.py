@@ -36,12 +36,18 @@ class UserCreateViewSet(
         if serializer.is_valid():
             user = User.objects.create(**serializer.validated_data)
             confirmation_code = default_token_generator.make_token(user)
-            send_confirmation_code(user.email, confirmation_code)
+            send_confirmation_code(
+                email=user.email,
+                code=confirmation_code
+            )
             return Response(
                 serializer.data,
                 status=status.HTTP_200_OK
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 
@@ -62,7 +68,7 @@ class UserViewSet(
 
     @action(
         detail=False,
-        method=['get', 'patch', 'delete'],
+        methods=['get', 'patch', 'delete'],
         url_path='r(?P<username>[\w.@+-]+)',
         url_name='get_user',
     )

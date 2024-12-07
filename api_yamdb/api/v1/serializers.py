@@ -1,6 +1,5 @@
 from rest_framework.serializers import (
     ModelSerializer,
-    Serializer,
     CharField,
     ValidationError,
 )
@@ -25,11 +24,11 @@ class UserCreateSerializer(ModelSerializer):
             return ValidationError(
                 'Этот ник нежелателен! Пожалуйста придумайте другой.'
             )
-        elif User.objects.get(username=attrs.get('username')):
+        elif User.objects.filter(username=attrs.get('username')):
             return ValidationError(
                 'Этот ник уже занят!'
             )
-        elif User.objects.get(email=attrs.get('email')):
+        elif User.objects.filter(email=attrs.get('email')):
             return ValidationError(
                 'Пользователь с таким email уже существует!'
             )
