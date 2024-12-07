@@ -22,7 +22,6 @@ from users.models import User
 
 
 
-
 class UserCreateViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin
@@ -50,8 +49,6 @@ class UserCreateViewSet(
         )
 
 
-
-
 class UserViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
@@ -65,6 +62,7 @@ class UserViewSet(
         permissions.IsAuthenticated,
         IsSuperUserOrAdmin
     )
+
 
     @action(
         detail=False,

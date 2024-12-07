@@ -4,6 +4,7 @@ from rest_framework.serializers import (
     ValidationError,
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.core.validators import MaxLengthValidator
 
 from core.constants import MAX_LENGTH_USERNAME
 from users.models import User
@@ -44,8 +45,21 @@ class UserSerializer(ModelSerializer):
             'username',
             'email',
             'bio',
-            'role'
+            'role',
+            'first_name',
+            'last_name'
         )
+
+    def validate(self, attrs):
+        first_name = attrs.get('first_name')
+        last_name = attrs.get('last_name')
+        if not first_name or not last_name:
+            return attrs
+        if len(first_name) > 150 or len(last_name) > 150:
+            return ValidationError(
+                'Длинна имени и фамилии не должна превышать 150 символов!'
+            )
+        return attrs
 
     def validate_username(self, username):
         if username == 'me':
