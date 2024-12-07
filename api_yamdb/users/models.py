@@ -1,4 +1,4 @@
-from django.core.validators import EmailValidator
+from django.core.validators import EmailValidator, RegexValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -21,13 +21,19 @@ class User(AbstractUser):
     username = models.CharField(
         verbose_name='Никнейм',
         max_length=MAX_LENGTH_USERNAME,
-        unique=True
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+$',
+                message='Никнейм содержит недопустимые символы',
+            ),
+        ]
     )
     email = models.EmailField(
         verbose_name='Электронная почта',
         unique=True,
         max_length=MAX_LENGTH_EMAIL,
-        validators=[EmailValidator, ]
+        validators=[EmailValidator,]
     )
     role = models.CharField(
         verbose_name='Роль пользователя',
