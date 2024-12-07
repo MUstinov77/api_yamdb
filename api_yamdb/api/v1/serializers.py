@@ -36,6 +36,7 @@ class UserCreateSerializer(ModelSerializer):
         return attrs
 
 
+
 class UserSerializer(ModelSerializer):
 
     class Meta:

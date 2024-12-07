@@ -4,15 +4,21 @@ from api.v1 import views
 
 router_v1 = DefaultRouter()
 
+router_v1.register(
+    'users',
+    views.UserViewSet,
+    basename='users'
+)
+
 auth_urls = [
     path(
         'signup/',
-        views.SignUpView.as_view(),
+        views.UserCreateViewSet.as_view({'post': 'create'}),
         name='signup'
     ),
     path(
         'token/',
-        views.GetTokenView.as_view(),
+        views.JWTView.as_view(),
         name='token'
     )
 ]
