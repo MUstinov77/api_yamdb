@@ -1,4 +1,8 @@
-from django.core.validators import EmailValidator, RegexValidator
+from django.core.validators import (
+    EmailValidator,
+    RegexValidator,
+    MaxLengthValidator
+)
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -27,6 +31,10 @@ class User(AbstractUser):
                 regex=r'^[\w.@+-]+$',
                 message='Никнейм содержит недопустимые символы',
             ),
+            MaxLengthValidator(
+                limit_value=MAX_LENGTH_USERNAME,
+                message=f'Длинна никнейма не должна превышать {MAX_LENGTH_USERNAME}'
+            )
         ]
     )
     email = models.EmailField(
@@ -34,6 +42,16 @@ class User(AbstractUser):
         unique=True,
         max_length=MAX_LENGTH_EMAIL,
         validators=[EmailValidator,]
+    )
+    first_name = models.CharField(
+        max_length=150,
+        verbose_name='Имя',
+        blank=True,
+    )
+    last_name = models.CharField(
+        max_length=150,
+        verbose_name='Фамилия',
+        blank=True,
     )
     role = models.CharField(
         verbose_name='Роль пользователя',
@@ -50,6 +68,8 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
+
+
 
     @property
     def is_user(self):

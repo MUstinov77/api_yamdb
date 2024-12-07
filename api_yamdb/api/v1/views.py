@@ -76,6 +76,7 @@ class UserViewSet(
         IsSuperUserOrAdmin
     )
 
+
     @action(
         detail=False,
         methods=['get', 'patch', 'delete'],
