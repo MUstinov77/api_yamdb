@@ -70,4 +70,4 @@
 
 #### Автор
 
-Гут Владимир - [https://github.com/VladimirMonolith](http://github.com/VladimirMonolith)     
+[Максим Устинов](https://github.com/MUstinov77)
