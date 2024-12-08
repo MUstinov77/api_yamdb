@@ -1,10 +1,12 @@
+from rest_framework.generics import get_object_or_404
 from rest_framework.serializers import (
     ModelSerializer,
     CharField,
     ValidationError,
+    Serializer
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.core.validators import MaxLengthValidator
+
 
 from core.constants import MAX_LENGTH_USERNAME
 from users.models import User
@@ -22,15 +24,15 @@ class UserCreateSerializer(ModelSerializer):
 
     def validate(self, attrs):
         if attrs.get('username') == 'me':
-            return ValidationError(
+            raise ValidationError(
                 'Этот ник нежелателен! Пожалуйста придумайте другой.'
             )
         elif User.objects.filter(username=attrs.get('username')):
-            return ValidationError(
+            raise ValidationError(
                 'Этот ник уже занят!'
             )
         elif User.objects.filter(email=attrs.get('email')):
-            return ValidationError(
+            raise ValidationError(
                 'Пользователь с таким email уже существует!'
             )
         return attrs
@@ -56,22 +58,23 @@ class UserSerializer(ModelSerializer):
         if not first_name or not last_name:
             return attrs
         if len(first_name) > 150 or len(last_name) > 150:
-            return ValidationError(
+            raise ValidationError(
                 'Длинна имени и фамилии не должна превышать 150 символов!'
             )
         return attrs
 
     def validate_username(self, username):
         if username == 'me':
-            return ValidationError(
+            raise ValidationError(
                 'Это имя использовать запрещено!'
             )
         return username
 
 
 
-class JWTSerializer(TokenObtainPairSerializer):
+class JWTSerializer(Serializer):
     """Сериализатор получения токена."""
+
 
     username = CharField(
         max_length=MAX_LENGTH_USERNAME,
@@ -80,11 +83,5 @@ class JWTSerializer(TokenObtainPairSerializer):
     confirmation_code = CharField(
         max_length=150,
         required=True,
+        write_only=True,
     )
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        data['username'] = self.user.username
-        data['email'] = self.user.email
-        return data
-
-
