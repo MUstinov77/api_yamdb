@@ -42,10 +42,11 @@
 - Установите зависимости из файла requirements.txt:   
 ``` pip install -r requirements.txt ```
 - Перейдите в папку api_yamdb/api_yamdb.
+``` cd api_yamdb ```
 - Примените миграции:   
 ``` python manage.py migrate ```
 - Загрузите тестовые данные:  
-``` python manage.py load_csv_data ```
+``` python manage.py importcsv ```
 - Выполните команду:   
 ``` python manage.py runserver ```
 
