@@ -36,11 +36,9 @@ class UserCreateSerializer(ModelSerializer):
     def validate(self, attrs):
         if attrs.get('username') == 'me':
             raise ValidationError(
-            raise ValidationError(
                 'Этот ник нежелателен! Пожалуйста придумайте другой.'
             )
         elif User.objects.filter(username=attrs.get('username')):
-            raise ValidationError(
             raise ValidationError(
                 'Этот ник уже занят!'
             )
