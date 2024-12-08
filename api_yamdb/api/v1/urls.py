@@ -1,5 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+
 from api.v1 import views
 
 reviews_url = r'titles/(?P<title_id>\d+)/reviews'
@@ -45,7 +46,7 @@ auth_urls = [
     ),
     path(
         'token/',
-        views.JWTView.as_view(),
+        views.JWTView.as_view({'post': 'create'}),
         name='token'
     )
 ]
