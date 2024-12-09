@@ -1,38 +1,39 @@
 
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, permissions, mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework import permissions
-from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import mixins, viewsets
 from rest_framework_simplejwt.tokens import AccessToken
 
+from api.v1.filters import TitleFilter
 from api.v1.permissions import (
-    AnonimReadOnly,
     IsSuperUserOrAdmin,
     IsAuthorModeratorAdminSuperUserOrReadOnly,
+    IsAdminUserOrReadOnly
 )
 from api.v1.serializers import (
     UserCreateSerializer,
     JWTSerializer,
-    UserSerializer
+    UserSerializer,
+    TitleReadSerializer,
+    TitleWriteSerializer,
+    CategorySerializer,
+    GenreSerializer
 )
-from core.constants import subject
 from reviews.models import (
     Category,
     Genre,
     Title,
     Review,
-    Comment
 )
 from api.v1 import serializers
 from core.utils import send_confirmation_code
@@ -61,6 +62,7 @@ class UserCreateViewSet(
             status=status.HTTP_200_OK
         )
 
+
 class UserViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
@@ -75,11 +77,10 @@ class UserViewSet(
         IsSuperUserOrAdmin
     )
 
-
     @action(
         detail=False,
         methods=['get', 'patch', 'delete'],
-        url_path='r(?P<username>[\w.@+-]+)',
+        url_path='r(?P<username>[w.@+-]+)',
         url_name='get_user',
     )
     def get_user(self, request, username):
@@ -163,49 +164,42 @@ class JWTView(
         return Response(message, status=status.HTTP_200_OK)
 
 
-
 class GenreViewSet(ModelViewSet):
-    """
-    Управление жанрами.
-
-    Позволяет просматривать, создавать и удалять жанры для администрации,
-    а для обычных пользователей доступен только GET-запрос.
-    """
+    """Получить список всех жанров.Права доступа:Доступно без токена."""
 
     queryset = Genre.objects.all()
-    serializer_class = serializers.GenreSerializer
+    serializer_class = GenreSerializer
+    permission_classes = (IsAdminUserOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name', )
+    lookup_field = 'slug'
 
 
 class CategoriesViewSet(ModelViewSet):
-    """
-    Управление категориями.
-
-    Позволяет просматривать, создавать и удалять категории для администрации,
-    а для обычных пользователей доступен только GET-запрос.
-    """
+    """Получить список всех категорий.Права доступа:Доступно без токена."""
 
     queryset = Category.objects.all()
-    serializer_class = serializers.CategorySerializer
+    serializer_class = CategorySerializer
+    permission_classes = (IsAdminUserOrReadOnly,)
+    filter_backends = (SearchFilter, )
+    search_fields = ('name', )
+    lookup_field = 'slug'
 
 
 class TitleViewSet(ModelViewSet):
-    """
-    Управление произведениями.
-    """
+    """Управление произведениями."""
 
-    # поменять permission
-    permission_classes = (IsAuthorModeratorAdminSuperUserOrReadOnly,)
-
-    def get_queryset(self):
-        return Title.objects.all().annotate(
-            # Добавляет в поле rating ср. арифм. всех отзывов
-            rating=Avg('reviews__score')
-        ).order_by('id')
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')
+    ).all()
+    permission_classes = (IsAdminUserOrReadOnly,)
+    filter_backends = (DjangoFilterBackend, )
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return serializers.TitleGetSerializer
-        return serializers.TitleEditSerializer
+        if self.action in ('list', 'retrieve'):
+            return TitleReadSerializer
+        return TitleWriteSerializer
 
 
 class ReviewViewSet(ModelViewSet):

@@ -1,18 +1,17 @@
 from rest_framework.generics import get_object_or_404
-from rest_framework.generics import get_object_or_404
+from rest_framework import serializers
 from rest_framework.serializers import (
     ModelSerializer,
-    CharField,
     ValidationError,
     Serializer,
     DateTimeField,
     IntegerField,
     SlugRelatedField
 )
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 from core.constants import MAX_LENGTH_USERNAME
+from reviews.validators import UsernameRegexValidator, username_me
 from reviews.models import (
     Category,
     Genre,
@@ -54,53 +53,21 @@ class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'bio',
-            'role',
-            'first_name',
-            'last_name'
-        )
-
-    def validate(self, attrs):
-        first_name = attrs.get('first_name')
-        last_name = attrs.get('last_name')
-        if not first_name or not last_name:
-            return attrs
-        if len(first_name) > 150 or len(last_name) > 150:
-            raise ValidationError(
-                'Длинна имени и фамилии не должна превышать 150 символов!'
-            )
-        return attrs
-
-    def validate_username(self, username):
-        if username == 'me':
-            raise ValidationError(
-                'Это имя использовать запрещено!'
-            )
-        return username
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role')
 
 
 class JWTSerializer(Serializer):
     """Сериализатор получения токена."""
 
-
-    username = CharField(
-        max_length=MAX_LENGTH_USERNAME,
-        required=True
-    )
-    confirmation_code = CharField(
-        max_length=150,
+    username = serializers.CharField(
         required=True,
-        write_only=True,
+        validators=(UsernameRegexValidator(), )
     )
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        data['username'] = self.user.username
-        data['email'] = self.user.email
-        return data
+    confirmation_code = serializers.CharField(required=True)
+
+    def validate_username(self, value):
+        return username_me(value)
 
 
 class CategorySerializer(ModelSerializer):
@@ -109,6 +76,7 @@ class CategorySerializer(ModelSerializer):
     class Meta:
         model = Category
         exclude = ('id',)
+        lookup_field = 'slug'
 
 
 class GenreSerializer(ModelSerializer):
@@ -117,6 +85,7 @@ class GenreSerializer(ModelSerializer):
     class Meta:
         model = Genre
         exclude = ('id',)
+        lookup_field = 'slug'
 
 
 class TitleSerializer(ModelSerializer):
@@ -187,3 +156,32 @@ class CommentSerializer(ModelSerializer):
     class Meta:
         model = Comment
         exclude = ('review',)
+
+
+class TitleReadSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(
+        read_only=True,
+        many=True
+    )
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        fields = '__all__'
+        model = Title
+
+
+class TitleWriteSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug'
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Title

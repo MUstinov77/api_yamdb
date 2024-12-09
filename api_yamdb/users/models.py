@@ -33,7 +33,8 @@ class User(AbstractUser):
             ),
             MaxLengthValidator(
                 limit_value=MAX_LENGTH_USERNAME,
-                message=f'Длинна никнейма не должна превышать {MAX_LENGTH_USERNAME}'
+                message=f'Длинна никнейма не должна превышать'
+                        f' {MAX_LENGTH_USERNAME}'
             )
         ]
     )
@@ -68,8 +69,6 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
-
-
 
     @property
     def is_user(self):
