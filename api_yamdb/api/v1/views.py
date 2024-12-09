@@ -49,18 +49,32 @@ class UserCreateViewSet(
     permission_classes = (permissions.AllowAny,)
 
     def create(self, request, *args, **kwargs):
-        serializer = UserCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = User.objects.create(**serializer.validated_data)
-        confirmation_code = default_token_generator.make_token(user)
-        send_confirmation_code(
-            email=user.email,
-            code=confirmation_code
-        )
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
+        user = User.objects.filter(
+            username=request.data.get('username'),
+            email=request.data.get('email')
+        ).first()
+        if user:
+            confirmation_code = default_token_generator.make_token(user)
+            send_confirmation_code(
+                email=user.email,
+                code=confirmation_code
+            )
+            return Response(
+                status=status.HTTP_200_OK
+            )
+        else:
+            serializer = UserCreateSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = User.objects.create(**serializer.validated_data)
+            confirmation_code = default_token_generator.make_token(user)
+            send_confirmation_code(
+                email=user.email,
+                code=confirmation_code
+            )
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
 
 
 class UserViewSet(
@@ -103,7 +117,6 @@ class UserViewSet(
                 status=status.HTTP_204_NO_CONTENT
             )
         serializer = UserSerializer(user)
-        serializer.save()
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
