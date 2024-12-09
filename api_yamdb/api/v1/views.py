@@ -80,7 +80,7 @@ class UserViewSet(
     @action(
         detail=False,
         methods=['get', 'patch', 'delete'],
-        url_path='r(?P<username>[w.@+-]+)',
+        url_path=r'(?P<username>[\w.@+-]+)',
         url_name='get_user',
     )
     def get_user(self, request, username):
