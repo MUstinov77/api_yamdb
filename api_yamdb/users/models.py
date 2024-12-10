@@ -45,7 +45,7 @@ class User(AbstractUser):
         verbose_name='Электронная почта',
         unique=True,
         max_length=MAX_LENGTH_EMAIL,
-        validators=[EmailValidator,]
+        validators=[EmailValidator, ]
     )
     first_name = models.CharField(
         max_length=MAX_LENGTH_FIRSTNAME,

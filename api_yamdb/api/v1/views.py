@@ -88,7 +88,7 @@ class UserViewSet(
 ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    filter_backends = [SearchFilter,]
+    filter_backends = [SearchFilter, ]
     search_fields = ('username',)
     permission_classes = (
         permissions.IsAuthenticated,
