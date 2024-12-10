@@ -1,44 +1,47 @@
+from pickle import FALSE
 
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, permissions, mixins, viewsets
+from rest_framework import (
+    mixins,
+    permissions,
+    status,
+    viewsets
+)
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
-from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework import mixins, viewsets
-from rest_framework_simplejwt.tokens import AccessToken
 
+from api.v1 import serializers
 from api.v1.filters import TitleFilter
+from api.v1.mixins import CreateListDestroyViewSet
 from api.v1.permissions import (
-    IsSuperUserOrIsAdminOnly,
+    IsAdminUserOrReadOnly,
     IsAuthorModeratorAdminSuperUserOrReadOnly,
-    IsAdminUserOrReadOnly
+    IsSuperUserOrIsAdminOnly
 )
 from api.v1.serializers import (
-    UserCreateSerializer,
+    CategorySerializer,
+    GenreSerializer,
     JWTSerializer,
-    UserSerializer,
     TitleReadSerializer,
     TitleWriteSerializer,
-    CategorySerializer,
-    GenreSerializer
+    UserCreateSerializer,
+    UserSerializer
 )
+from core.utils import send_confirmation_code
 from reviews.models import (
     Category,
     Genre,
-    Title,
     Review,
+    Title
 )
-from api.v1 import serializers
-from api.v1.mixins import CreateListDestroyViewSet
-from core.utils import send_confirmation_code
-from users.models import User
+from users.models import User, ADMIN, MODERATOR
 
 
 class UserCreateViewSet(
@@ -82,6 +85,8 @@ class UserViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin
 ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -91,6 +96,13 @@ class UserViewSet(
         permissions.IsAuthenticated,
         IsSuperUserOrIsAdminOnly
     )
+    lookup_field = 'username'
+
+    def get_user(self, username):
+        return get_object_or_404(
+            User,
+            username=username
+        )
 
     @action(
         detail=False,
@@ -98,9 +110,9 @@ class UserViewSet(
         url_path=r'(?P<username>[\w.@+-]+)',
         url_name='get_user',
     )
-    def get_user(self, request, username):
+    def get_user_data(self, request, username):
         """Получение данных пользователя по его username и управление."""
-        user = get_object_or_404(User, username=username)
+        user = self.get_user(username)
         if request.method == 'PATCH':
             serializer = UserSerializer(
                 user,
@@ -113,7 +125,7 @@ class UserViewSet(
                 serializer.data,
                 status=status.HTTP_200_OK
             )
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             user.delete()
             return Response(
                 status=status.HTTP_204_NO_CONTENT
@@ -230,26 +242,35 @@ class ReviewViewSet(ModelViewSet):
     """
 
     serializer_class = serializers.ReviewSerializer
-    permission_classes = (IsAuthorModeratorAdminSuperUserOrReadOnly,)
+    permission_classes = (
+        IsAuthorModeratorAdminSuperUserOrReadOnly,
+    )
+    http_method_names = [
+        'get',
+        'post',
+        'patch',
+        'delete'
+    ]
 
     def get_title(self):
-        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        return get_object_or_404(
+            Title,
+            pk=self.kwargs.get('title_id')
+        )
 
     def get_queryset(self):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
         if not self.request.user.is_authenticated:
-            raise PermissionDenied("You must be logged in to create a review.")
-        serializer.save(author=self.request.user, title=self.get_title())
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(
-                {'detail': 'Метод "PUT" не разрешен.'},
-                status=status.HTTP_405_METHOD_NOT_ALLOWED
+            raise PermissionDenied(
+                "You must be logged in to create a review."
             )
-        return super().update(request, *args, **kwargs)
+        serializer.save(
+            author=self.request.user,
+            title=self.get_title()
+        )
+
 
 
 class CommentViewSet(ModelViewSet):

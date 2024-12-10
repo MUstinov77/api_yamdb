@@ -1,9 +1,10 @@
 import csv
 import os
+
+from django.conf import settings
 from django.core.management import BaseCommand, CommandError
 from django.db.utils import IntegrityError
 
-from django.conf import settings
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 

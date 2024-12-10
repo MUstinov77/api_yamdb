@@ -5,14 +5,14 @@ from django.core.validators import (
 )
 from django.db import models
 
-from reviews.validators import validate_year
 from core.constants import (
-    LENG_SLUG,
-    LENG_MAX,
     LENG_CUT,
-    MIN_SCORE,
-    MAX_SCORE
+    LENG_MAX,
+    LENG_SLUG,
+    MAX_SCORE,
+    MIN_SCORE
 )
+from core.validators import validate_year
 from users.models import User
 
 

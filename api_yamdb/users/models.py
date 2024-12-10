@@ -1,16 +1,10 @@
-from django.core.validators import (
-    EmailValidator,
-    RegexValidator,
-    MaxLengthValidator
-)
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import (EmailValidator, MaxLengthValidator,
+                                    RegexValidator)
 from django.db import models
 
-from core.constants import (
-    MAX_LENGTH_USERNAME,
-    MAX_LENGTH_EMAIL,
-    USER_ROLES
-)
+from core.constants import MAX_LENGTH_EMAIL, MAX_LENGTH_USERNAME, USER_ROLES
+
 
 USER = USER_ROLES['user']
 ADMIN = USER_ROLES['admin']

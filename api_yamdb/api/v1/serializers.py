@@ -1,21 +1,23 @@
-from rest_framework.generics import get_object_or_404
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 from rest_framework.serializers import (
-    ModelSerializer,
-    ValidationError,
-    Serializer,
     DateTimeField,
-    SlugRelatedField
+    ModelSerializer,
+    Serializer,
+    SlugRelatedField,
+    ValidationError
 )
 
-
-from reviews.validators import UsernameRegexValidator, username_me
 from reviews.models import (
     Category,
+    Comment,
     Genre,
-    Title,
     Review,
-    Comment
+    Title
+)
+from core.validators import (
+    UsernameRegexValidator,
+    username_me
 )
 from users.models import User
 
