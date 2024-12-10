@@ -16,7 +16,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from api.v1.filters import TitleFilter
 from api.v1.permissions import (
-    IsSuperUserOrAdmin,
+    IsSuperUserOrIsAdminOnly,
     IsAuthorModeratorAdminSuperUserOrReadOnly,
     IsAdminUserOrReadOnly
 )
@@ -36,6 +36,7 @@ from reviews.models import (
     Review,
 )
 from api.v1 import serializers
+from api.v1.mixins import CreateListDestroyViewSet
 from core.utils import send_confirmation_code
 from users.models import User
 
@@ -49,18 +50,32 @@ class UserCreateViewSet(
     permission_classes = (permissions.AllowAny,)
 
     def create(self, request, *args, **kwargs):
-        serializer = UserCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = User.objects.create(**serializer.validated_data)
-        confirmation_code = default_token_generator.make_token(user)
-        send_confirmation_code(
-            email=user.email,
-            code=confirmation_code
-        )
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
+        user = User.objects.filter(
+            username=request.data.get('username'),
+            email=request.data.get('email')
+        ).first()
+        if user:
+            confirmation_code = default_token_generator.make_token(user)
+            send_confirmation_code(
+                email=user.email,
+                code=confirmation_code
+            )
+            return Response(
+                status=status.HTTP_200_OK
+            )
+        else:
+            serializer = UserCreateSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = User.objects.create(**serializer.validated_data)
+            confirmation_code = default_token_generator.make_token(user)
+            send_confirmation_code(
+                email=user.email,
+                code=confirmation_code
+            )
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
 
 
 class UserViewSet(
@@ -74,16 +89,17 @@ class UserViewSet(
     search_fields = ('username',)
     permission_classes = (
         permissions.IsAuthenticated,
-        IsSuperUserOrAdmin
+        IsSuperUserOrIsAdminOnly
     )
 
     @action(
         detail=False,
-        methods=['get', 'patch', 'delete'],
+        methods=['GET', 'PATCH', 'DELETE'],
         url_path=r'(?P<username>[\w.@+-]+)',
         url_name='get_user',
     )
     def get_user(self, request, username):
+        """Получение данных пользователя по его username и управление."""
         user = get_object_or_404(User, username=username)
         if request.method == 'PATCH':
             serializer = UserSerializer(
@@ -103,7 +119,6 @@ class UserViewSet(
                 status=status.HTTP_204_NO_CONTENT
             )
         serializer = UserSerializer(user)
-        serializer.save()
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
@@ -111,12 +126,13 @@ class UserViewSet(
 
     @action(
         detail=False,
-        methods=['get', 'patch'],
+        methods=['GET', 'PATCH'],
         permission_classes=[permissions.IsAuthenticated],
         url_path='me',
         url_name='me',
     )
     def get_me(self, request):
+        """Получение пользователем подробной информации о себе."""
         if request.method == 'PATCH':
             serializer = UserSerializer(
                 request.user,
@@ -164,7 +180,7 @@ class JWTView(
         return Response(message, status=status.HTTP_200_OK)
 
 
-class GenreViewSet(ModelViewSet):
+class GenreViewSet(CreateListDestroyViewSet):
     """Получить список всех жанров.Права доступа:Доступно без токена."""
 
     queryset = Genre.objects.all()
@@ -175,7 +191,7 @@ class GenreViewSet(ModelViewSet):
     lookup_field = 'slug'
 
 
-class CategoriesViewSet(ModelViewSet):
+class CategoriesViewSet(CreateListDestroyViewSet):
     """Получить список всех категорий.Права доступа:Доступно без токена."""
 
     queryset = Category.objects.all()
@@ -193,8 +209,14 @@ class TitleViewSet(ModelViewSet):
         rating=Avg('reviews__score')
     ).all()
     permission_classes = (IsAdminUserOrReadOnly,)
-    filter_backends = (DjangoFilterBackend, )
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+    http_method_names = [
+        'get',
+        'post',
+        'delete',
+        'patch'
+    ]
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
