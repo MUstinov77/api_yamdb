@@ -1,8 +1,7 @@
 from rest_framework import permissions
 
 
-
-class IsSuperUserOrAdmin(permissions.BasePermission):
+class IsSuperUserOrIsAdminOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         return (
             request.user.is_superuser or
@@ -36,4 +35,6 @@ class IsAdminUserOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return request.user.is_admin if request.user.is_authenticated else False
+        return (
+            request.user.is_admin if request.user.is_authenticated else False
+        )

@@ -5,12 +5,10 @@ from rest_framework.serializers import (
     ValidationError,
     Serializer,
     DateTimeField,
-    IntegerField,
     SlugRelatedField
 )
 
 
-from core.constants import MAX_LENGTH_USERNAME
 from reviews.validators import UsernameRegexValidator, username_me
 from reviews.models import (
     Category,
@@ -86,36 +84,6 @@ class GenreSerializer(ModelSerializer):
         model = Genre
         exclude = ('id',)
         lookup_field = 'slug'
-
-
-class TitleSerializer(ModelSerializer):
-    """Базовый сериализатор произведения."""
-
-    class Meta:
-        model = Title
-        fields = '__all__'
-
-
-class TitleGetSerializer(TitleSerializer):
-    """Сериализатор для получения произведений."""
-
-    category = CategorySerializer()
-    genre = GenreSerializer(many=True)
-    rating = IntegerField(read_only=True)
-
-
-class TitleEditSerializer(TitleSerializer):
-    """Сериализатор для изменения произведений."""
-
-    category = SlugRelatedField(
-        queryset=Category.objects.all(),
-        slug_field="slug",
-    )
-    genre = SlugRelatedField(
-        queryset=Genre.objects.all(),
-        slug_field="slug",
-        many=True,
-    )
 
 
 class ReviewSerializer(ModelSerializer):

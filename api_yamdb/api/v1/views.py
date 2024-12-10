@@ -16,7 +16,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from api.v1.filters import TitleFilter
 from api.v1.permissions import (
-    IsSuperUserOrAdmin,
+    IsSuperUserOrIsAdminOnly,
     IsAuthorModeratorAdminSuperUserOrReadOnly,
     IsAdminUserOrReadOnly
 )
@@ -36,6 +36,7 @@ from reviews.models import (
     Review,
 )
 from api.v1 import serializers
+from api.v1.mixins import CreateListDestroyViewSet
 from core.utils import send_confirmation_code
 from users.models import User
 
@@ -88,16 +89,17 @@ class UserViewSet(
     search_fields = ('username',)
     permission_classes = (
         permissions.IsAuthenticated,
-        IsSuperUserOrAdmin
+        IsSuperUserOrIsAdminOnly
     )
 
     @action(
         detail=False,
-        methods=['get', 'patch', 'delete'],
+        methods=['GET', 'PATCH', 'DELETE'],
         url_path=r'(?P<username>[\w.@+-]+)',
         url_name='get_user',
     )
     def get_user(self, request, username):
+        """Получение данных пользователя по его username и управление."""
         user = get_object_or_404(User, username=username)
         if request.method == 'PATCH':
             serializer = UserSerializer(
@@ -124,12 +126,13 @@ class UserViewSet(
 
     @action(
         detail=False,
-        methods=['get', 'patch'],
+        methods=['GET', 'PATCH'],
         permission_classes=[permissions.IsAuthenticated],
         url_path='me',
         url_name='me',
     )
     def get_me(self, request):
+        """Получение пользователем подробной информации о себе."""
         if request.method == 'PATCH':
             serializer = UserSerializer(
                 request.user,
@@ -177,7 +180,7 @@ class JWTView(
         return Response(message, status=status.HTTP_200_OK)
 
 
-class GenreViewSet(ModelViewSet):
+class GenreViewSet(CreateListDestroyViewSet):
     """Получить список всех жанров.Права доступа:Доступно без токена."""
 
     queryset = Genre.objects.all()
@@ -188,7 +191,7 @@ class GenreViewSet(ModelViewSet):
     lookup_field = 'slug'
 
 
-class CategoriesViewSet(ModelViewSet):
+class CategoriesViewSet(CreateListDestroyViewSet):
     """Получить список всех категорий.Права доступа:Доступно без токена."""
 
     queryset = Category.objects.all()
@@ -206,7 +209,7 @@ class TitleViewSet(ModelViewSet):
         rating=Avg('reviews__score')
     ).all()
     permission_classes = (IsAdminUserOrReadOnly,)
-    filter_backends = (DjangoFilterBackend, )
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     http_method_names = [
         'get',
