@@ -9,7 +9,6 @@ from reviews.models import (
 )
 
 
-
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
     list_display = ('name', 'category', 'year', 'description')
@@ -34,6 +33,7 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'score', 'pub_date')
     search_fields = ('title__name', 'author__username', 'text')
     list_filter = ('score',)
+
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):

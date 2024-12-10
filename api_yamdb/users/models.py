@@ -1,9 +1,18 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (EmailValidator, MaxLengthValidator,
-                                    RegexValidator)
+from django.core.validators import (
+    EmailValidator,
+    MaxLengthValidator,
+    RegexValidator
+)
 from django.db import models
 
-from core.constants import MAX_LENGTH_EMAIL, MAX_LENGTH_USERNAME, USER_ROLES
+from core.constants import (
+    MAX_LENGTH_EMAIL,
+    MAX_LENGTH_FIRSTNAME,
+    MAX_LENGTH_LASTNAME,
+    MAX_LENGTH_USERNAME,
+    USER_ROLES
+)
 
 
 USER = USER_ROLES['user']
@@ -39,12 +48,12 @@ class User(AbstractUser):
         validators=[EmailValidator,]
     )
     first_name = models.CharField(
-        max_length=150,
+        max_length=MAX_LENGTH_FIRSTNAME,
         verbose_name='Имя',
         blank=True,
     )
     last_name = models.CharField(
-        max_length=150,
+        max_length=MAX_LENGTH_LASTNAME,
         verbose_name='Фамилия',
         blank=True,
     )

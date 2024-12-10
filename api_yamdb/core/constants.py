@@ -1,6 +1,8 @@
 # Константы для модели пользователя
 MAX_LENGTH_USERNAME = 150
 MAX_LENGTH_EMAIL = 254
+MAX_LENGTH_LASTNAME = 150
+MAX_LENGTH_FIRSTNAME = 150
 
 # Константы для остальных моделей
 LENG_SLUG = 50

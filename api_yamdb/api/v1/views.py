@@ -1,5 +1,3 @@
-from pickle import FALSE
-
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
@@ -41,7 +39,7 @@ from reviews.models import (
     Review,
     Title
 )
-from users.models import User, ADMIN, MODERATOR
+from users.models import User
 
 
 class UserCreateViewSet(
@@ -98,7 +96,7 @@ class UserViewSet(
     )
     lookup_field = 'username'
 
-    def get_user(self, username):
+    def get_user_by_username(self, username):
         return get_object_or_404(
             User,
             username=username
@@ -112,7 +110,7 @@ class UserViewSet(
     )
     def get_user_data(self, request, username):
         """Получение данных пользователя по его username и управление."""
-        user = self.get_user(username)
+        user = self.get_user_by_username(username)
         if request.method == 'PATCH':
             serializer = UserSerializer(
                 user,
@@ -270,7 +268,6 @@ class ReviewViewSet(ModelViewSet):
             author=self.request.user,
             title=self.get_title()
         )
-
 
 
 class CommentViewSet(ModelViewSet):
