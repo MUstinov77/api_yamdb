@@ -5,14 +5,14 @@ from django.core.validators import (
 )
 from django.db import models
 
-from reviews.validators import validate_year
 from core.constants import (
-    LENG_SLUG,
-    LENG_MAX,
     LENG_CUT,
-    MIN_SCORE,
-    MAX_SCORE
+    LENG_MAX,
+    LENG_SLUG,
+    MAX_SCORE,
+    MIN_SCORE
 )
+from core.validators import validate_year
 from users.models import User
 
 
@@ -50,14 +50,14 @@ class BaseAuthorModel(models.Model):
     датой публикации (pub_date).
     """
 
-    text = models.CharField(
-        'Текст',
-        max_length=LENG_MAX
-    )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор'
+    )
+    text = models.CharField(
+        'Текст',
+        max_length=LENG_MAX
     )
     pub_date = models.DateTimeField(
         'Дата и время публикации',
@@ -99,11 +99,15 @@ class Genre(BaseGenreAndCategoryModel):
 class Title(models.Model):
     """Модель произведения."""
 
-    category = models.ForeignKey(
-        Category,
-        verbose_name='Категория',
-        on_delete=models.PROTECT,
-        related_name='titles',
+    name = models.CharField(
+        'Название',
+        max_length=LENG_MAX,
+        db_index=True,
+    )
+    year = models.PositiveSmallIntegerField(
+        'Год выпуска',
+        db_index=True,
+        validators=(validate_year,),
     )
     description = models.TextField(
         'Описание',
@@ -116,21 +120,16 @@ class Title(models.Model):
         verbose_name='Жанр',
         related_name='titles',
     )
-    name = models.CharField(
-        'Название',
-        max_length=LENG_MAX,
-        db_index=True,
-    )
-    year = models.PositiveSmallIntegerField(
-        'Год выпуска',
-        db_index=True,
-        validators=(validate_year,),
+    category = models.ForeignKey(
+        Category,
+        verbose_name='Категория',
+        on_delete=models.PROTECT,
+        related_name='titles',
     )
 
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
-        ordering = ('name',)
 
     def __str__(self):
         return self.name
@@ -154,7 +153,7 @@ class Review(BaseAuthorModel):
         error_messages={
             'validators': f'Оценка от {MIN_SCORE} до {MAX_SCORE}!'
         },
-        default=1
+        default=1,
     )
 
     class Meta(BaseAuthorModel.Meta):

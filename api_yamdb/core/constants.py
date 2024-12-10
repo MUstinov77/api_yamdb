@@ -1,6 +1,8 @@
 # Константы для модели пользователя
-MAX_LENGTH_USERNAME = 50
-MAX_LENGTH_EMAIL = 100
+MAX_LENGTH_USERNAME = 150
+MAX_LENGTH_EMAIL = 254
+MAX_LENGTH_LASTNAME = 150
+MAX_LENGTH_FIRSTNAME = 150
 
 # Константы для остальных моделей
 LENG_SLUG = 50
@@ -17,4 +19,4 @@ USER_ROLES = {
 }
 
 # Тема письма при отправки токена
-subject = 'Код для подтверждения регистрации на api_yamdb'
+CONFIRM_CODE_MESSAGE = 'Код для подтверждения регистрации на api_yamdb'
