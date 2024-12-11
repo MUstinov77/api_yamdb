@@ -17,7 +17,7 @@ from reviews.models import (
 )
 from core.validators import (
     UsernameRegexValidator,
-    username_me
+    username_validator
 )
 from users.models import User
 
@@ -67,7 +67,7 @@ class JWTSerializer(Serializer):
     confirmation_code = serializers.CharField(required=True)
 
     def validate_username(self, value):
-        return username_me(value)
+        return username_validator(value)
 
 
 class CategorySerializer(ModelSerializer):

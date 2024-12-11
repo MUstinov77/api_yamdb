@@ -20,3 +20,21 @@ USER_ROLES = {
 
 # Тема письма при отправки токена
 CONFIRM_CODE_MESSAGE = 'Код для подтверждения регистрации на api_yamdb'
+
+
+ADDITIONAL_USER_FIElDS = (
+    (None, {
+        'fields': (
+            'bio',
+            'role',
+        )
+    }),
+)
+
+FORBIDDEN_SIMBOLS_REGEX = r'^[\w.@+-]+$'
+
+USERNAME_REGEX = r'^[\w.@+-]+\Z'
+
+FORBIDDEN_NAMES = (
+    'me',
+)

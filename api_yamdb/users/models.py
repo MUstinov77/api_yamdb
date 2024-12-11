@@ -1,19 +1,16 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (
-    EmailValidator,
-    MaxLengthValidator,
-    RegexValidator
-)
+from django.core.validators import RegexValidator
 from django.db import models
 
 from core.constants import (
+    FORBIDDEN_SIMBOLS_REGEX,
     MAX_LENGTH_EMAIL,
     MAX_LENGTH_FIRSTNAME,
     MAX_LENGTH_LASTNAME,
     MAX_LENGTH_USERNAME,
     USER_ROLES
 )
-
+from core.validators import username_validator
 
 USER = USER_ROLES['user']
 ADMIN = USER_ROLES['admin']
@@ -31,37 +28,22 @@ class User(AbstractUser):
         unique=True,
         validators=[
             RegexValidator(
-                regex=r'^[\w.@+-]+$',
+                regex=FORBIDDEN_SIMBOLS_REGEX,
                 message='Никнейм содержит недопустимые символы',
             ),
-            MaxLengthValidator(
-                limit_value=MAX_LENGTH_USERNAME,
-                message=f'Длинна никнейма не должна превышать'
-                        f' {MAX_LENGTH_USERNAME}'
-            )
+            username_validator,
         ]
     )
     email = models.EmailField(
         verbose_name='Электронная почта',
         unique=True,
         max_length=MAX_LENGTH_EMAIL,
-        validators=[EmailValidator, ]
-    )
-    first_name = models.CharField(
-        max_length=MAX_LENGTH_FIRSTNAME,
-        verbose_name='Имя',
-        blank=True,
-    )
-    last_name = models.CharField(
-        max_length=MAX_LENGTH_LASTNAME,
-        verbose_name='Фамилия',
-        blank=True,
     )
     role = models.CharField(
         verbose_name='Роль пользователя',
         max_length=len(max(USER_ROLES.values(), key=len)),
         choices=roles,
-        default='user'
+        default=USER
     )
     bio = models.TextField(
         verbose_name='Bio',
@@ -73,9 +55,9 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
-    @property
-    def is_user(self):
-        return self.role == USER
+    def __str__(self):
+        return self.username
+
 
     @property
     def is_moderator(self):
@@ -84,6 +66,3 @@ class User(AbstractUser):
     @property
     def is_admin(self):
         return self.role == ADMIN or self.is_superuser
-
-    def __str__(self):
-        return self.username

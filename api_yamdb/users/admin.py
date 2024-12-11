@@ -1,22 +1,16 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+
+from core.constants import ADDITIONAL_USER_FIElDS
 
 from .models import User
 
 
-@admin.register(User)
-class AdminUser(admin.ModelAdmin):
-    list_display = (
-        'pk',
-        'username',
-        'email',
-        'first_name',
-        'last_name',
-        'role',
-        'bio',
-    )
-    list_editable = ('role',)
-    list_filter = ('role',)
-    search_fields = (
-        'username',
-        'email'
-    )
+class AdminUser(BaseUserAdmin):
+    model = User
+
+    add_fieldsets = BaseUserAdmin.add_fieldsets + ADDITIONAL_USER_FIElDS
+    fieldsets = BaseUserAdmin.fieldsets + ADDITIONAL_USER_FIElDS
+
+
+admin.site.register(User, AdminUser)
