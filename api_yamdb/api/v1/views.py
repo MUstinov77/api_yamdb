@@ -8,7 +8,7 @@ from rest_framework import (
     viewsets
 )
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -17,7 +17,6 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from api.v1 import serializers
 from api.v1.filters import TitleFilter
-from api.v1.mixins import CreateListDestroyViewSet
 from api.v1.permissions import (
     IsAdminUserOrReadOnly,
     IsAuthorModeratorAdminSuperUserOrReadOnly,
@@ -190,26 +189,41 @@ class JWTView(
         return Response(message, status=status.HTTP_200_OK)
 
 
-class GenreViewSet(CreateListDestroyViewSet):
+class BaseCreateListDestroyViewSet(viewsets.ModelViewSet):
+    """Общий базовый вьюсет для создания и удаления объектов."""
+
+    permission_classes = (IsAdminUserOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+    def retrieve(self, request, *args, **kwargs):
+        # Запрещает доступ к отдельным объектам (GET)
+        raise MethodNotAllowed(
+            'GET',
+            detail='Получение отдельных объектов не разрешено.'
+        )
+
+    def partial_update(self, request, *args, **kwargs):
+        # Запрещает доступ к отдельным объектам (PATCH)
+        raise MethodNotAllowed(
+            'PATCH',
+            detail='Обновление отдельных объектов не разрешено.'
+        )
+
+
+class GenreViewSet(BaseCreateListDestroyViewSet):
     """Получить список всех жанров.Права доступа:Доступно без токена."""
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminUserOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name', )
-    lookup_field = 'slug'
 
 
-class CategoriesViewSet(CreateListDestroyViewSet):
+class CategoriesViewSet(BaseCreateListDestroyViewSet):
     """Получить список всех категорий.Права доступа:Доступно без токена."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminUserOrReadOnly,)
-    filter_backends = (SearchFilter, )
-    search_fields = ('name', )
-    lookup_field = 'slug'
 
 
 class TitleViewSet(ModelViewSet):
@@ -217,19 +231,21 @@ class TitleViewSet(ModelViewSet):
 
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
-    ).all()
+    ).all().order_by('-year')
     permission_classes = (IsAdminUserOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-    http_method_names = [
+    http_method_names = (
         'get',
         'post',
         'delete',
         'patch'
-    ]
+    )
 
     def get_serializer_class(self):
-        if self.action in ('list', 'retrieve'):
+        # Не менять на permissions.SAFE_METHODS.
+        # Ломает ответы в полях category и genre на другие.
+        if self.action in ('retrieve', 'list'):
             return TitleReadSerializer
         return TitleWriteSerializer
 
@@ -243,12 +259,12 @@ class ReviewViewSet(ModelViewSet):
     permission_classes = (
         IsAuthorModeratorAdminSuperUserOrReadOnly,
     )
-    http_method_names = [
+    http_method_names = (
         'get',
         'post',
         'patch',
-        'delete'
-    ]
+        'delete',
+    )
 
     def get_title(self):
         return get_object_or_404(
@@ -260,10 +276,6 @@ class ReviewViewSet(ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        if not self.request.user.is_authenticated:
-            raise PermissionDenied(
-                "You must be logged in to create a review."
-            )
         serializer.save(
             author=self.request.user,
             title=self.get_title()
@@ -277,20 +289,22 @@ class CommentViewSet(ModelViewSet):
 
     serializer_class = serializers.CommentSerializer
     permission_classes = (IsAuthorModeratorAdminSuperUserOrReadOnly,)
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+    )
 
     def get_review(self):
-        return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        return get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title=self.kwargs.get('title_id')
+        )
 
     def get_queryset(self):
         return self.get_review().comments.all().select_related('author')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review=self.get_review())
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(
-                {'detail': 'Метод "PUT" не разрешен.'},
-                status=status.HTTP_405_METHOD_NOT_ALLOWED
-            )
-        return super().update(request, *args, **kwargs)
