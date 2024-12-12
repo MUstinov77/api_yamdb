@@ -17,7 +17,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from api.v1 import serializers
 from api.v1.filters import TitleFilter
-from api.v1.mixins import CreateListDestroyViewSet
+from api.v1.view_sets import CreateListDestroyViewSet
 from api.v1.permissions import (
     IsAdminUserOrReadOnly,
     IsAuthorModeratorAdminSuperUserOrReadOnly,
@@ -241,6 +241,7 @@ class ReviewViewSet(ModelViewSet):
 
     serializer_class = serializers.ReviewSerializer
     permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
         IsAuthorModeratorAdminSuperUserOrReadOnly,
     )
     http_method_names = [
