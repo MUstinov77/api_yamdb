@@ -1,5 +1,6 @@
 import csv
 import os
+from sys import stdout
 
 from django.conf import settings
 from django.core.management import BaseCommand, CommandError
@@ -27,7 +28,7 @@ def import_csv():
             )
             for row in reader
         ])
-        print(f'Файл {csvfile.name} загружен.')
+        stdout.write(f'Файл {csvfile.name} загружен.')
 
     with open(
         os.path.join(FILE_DIR, "genre.csv"), encoding="utf-8"
@@ -41,7 +42,7 @@ def import_csv():
             )
             for row in reader
         ])
-        print(f'Файл {csvfile.name} загружен.')
+        stdout.write(f'Файл {csvfile.name} загружен.')
 
     with open(
         os.path.join(FILE_DIR, "users.csv"), encoding="utf-8"
@@ -59,7 +60,7 @@ def import_csv():
             )
             for row in reader
         ])
-        print(f'Файл {csvfile.name} загружен.')
+        stdout.write(f'Файл {csvfile.name} загружен.')
 
     with open(
         os.path.join(FILE_DIR, "titles.csv"), encoding="utf-8"
@@ -76,7 +77,7 @@ def import_csv():
             )
             for row in reader
         ])
-        print(f'Файл {csvfile.name} загружен.')
+        stdout.write(f'Файл {csvfile.name} загружен.')
 
     with open(
         os.path.join(FILE_DIR, "genre_title.csv"), encoding="utf-8"
@@ -110,7 +111,7 @@ def import_csv():
             )
             for row in reader
         ])
-        print(f'Файл {csvfile.name} загружен.')
+        stdout.write(f'Файл {csvfile.name} загружен.')
 
     with open(
         os.path.join(FILE_DIR, "comments.csv"), encoding="utf-8"
@@ -129,7 +130,7 @@ def import_csv():
             )
             for row in reader
         ])
-        print(f'Файл {csvfile.name} загружен.')
+        stdout.write(f'Файл {csvfile.name} загружен.')
 
 
 class Command(BaseCommand):
