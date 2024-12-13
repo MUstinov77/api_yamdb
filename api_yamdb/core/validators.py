@@ -13,7 +13,7 @@ from core.constants import (
 def username_validator(username):
     """Проверка имени пользователя (me недопустимое имя)."""
     if username in FORBIDDEN_NAMES:
-       return ValidationError(
+       raise ValidationError(
            f'Имя пользователя `{username}` недопустимо.',
        )
     return username

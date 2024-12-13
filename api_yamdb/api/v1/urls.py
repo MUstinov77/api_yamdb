@@ -41,12 +41,12 @@ router_v1.register(
 auth_urls = [
     path(
         'signup/',
-        views.UserCreateViewSet.as_view({'post': 'create'}),
+        views.UserCreateView.as_view(),
         name='signup'
     ),
     path(
         'token/',
-        views.JWTView.as_view({'post': 'create'}),
+        views.JWTView.as_view(),
         name='token'
     )
 ]

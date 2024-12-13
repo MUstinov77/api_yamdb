@@ -69,6 +69,8 @@
 
 #### Полный список запросов API находятся в документации
 
-#### Автор
+#### Авторы
 
-[Максим Устинов](https://github.com/MUstinov77)
+[MUstinov77](https://github.com/MUstinov77)
+[ArtemSelivanov33](https://github.com/ArtemSelivanov33)
+[SenoStar](https://github.com/SenoStar)
