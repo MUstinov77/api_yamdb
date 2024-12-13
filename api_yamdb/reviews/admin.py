@@ -11,9 +11,16 @@ from reviews.models import (
 
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'year', 'description')
+    list_display = ('name', 'category', 'year', 'description', 'get_genre')
     search_fields = ('name', 'description')
     list_filter = ('category', 'genre')
+    list_editable = ('category',)
+
+    def get_genre(self, obj):
+        """Получает жанр или список жанров произведения."""
+        return ', '.join((genre.name for genre in obj.genre.all()))
+
+    get_genre.short_description = 'Жанр(ы)'
 
 
 @admin.register(Category)
