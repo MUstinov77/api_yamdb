@@ -1,7 +1,6 @@
 from django.core.mail import send_mail
 
 from api_yamdb.settings import EMAIL_ADMIN
-
 from .constants import CONFIRM_CODE_MESSAGE
 
 

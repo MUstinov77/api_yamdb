@@ -5,7 +5,8 @@ from rest_framework import (
     mixins,
     permissions,
     status,
-    viewsets
+    views,
+    viewsets,
 )
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
@@ -17,6 +18,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from api.v1 import serializers
 from api.v1.filters import TitleFilter
+from api.v1.view_sets import CreateListDestroyViewSet
 from api.v1.permissions import (
     IsAdminUserOrReadOnly,
     IsAuthorModeratorAdminSuperUserOrReadOnly,
@@ -41,49 +43,23 @@ from reviews.models import (
 from users.models import User
 
 
-class UserCreateViewSet(
-    viewsets.GenericViewSet,
-    mixins.CreateModelMixin
-):
+class UserCreateView(views.APIView):
     queryset = User.objects.all()
     serializer_class = UserCreateSerializer
     permission_classes = (permissions.AllowAny,)
 
-    def create(self, request, *args, **kwargs):
-        user = User.objects.filter(
-            username=request.data.get('username'),
-            email=request.data.get('email')
-        ).first()
-        if user:
-            confirmation_code = default_token_generator.make_token(user)
-            send_confirmation_code(
-                email=user.email,
-                code=confirmation_code
-            )
-            return Response(
-                status=status.HTTP_200_OK
-            )
-        else:
-            serializer = UserCreateSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user = User.objects.create(**serializer.validated_data)
-            confirmation_code = default_token_generator.make_token(user)
-            send_confirmation_code(
-                email=user.email,
-                code=confirmation_code
-            )
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
+    def post(self, request, *args, **kwargs):
+        serializer = UserCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
 
 class UserViewSet(
-    viewsets.GenericViewSet,
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin
+    viewsets.ModelViewSet
 ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -94,44 +70,13 @@ class UserViewSet(
         IsSuperUserOrIsAdminOnly
     )
     lookup_field = 'username'
+    http_method_names = [
+        'get',
+        'post',
+        'patch',
+        'delete',
+    ]
 
-    def get_user_by_username(self, username):
-        return get_object_or_404(
-            User,
-            username=username
-        )
-
-    @action(
-        detail=False,
-        methods=['GET', 'PATCH', 'DELETE'],
-        url_path=r'(?P<username>[\w.@+-]+)',
-        url_name='get_user',
-    )
-    def get_user_data(self, request, username):
-        """Получение данных пользователя по его username и управление."""
-        user = self.get_user_by_username(username)
-        if request.method == 'PATCH':
-            serializer = UserSerializer(
-                user,
-                data=request.data,
-                partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
-        if request.method == 'DELETE':
-            user.delete()
-            return Response(
-                status=status.HTTP_204_NO_CONTENT
-            )
-        serializer = UserSerializer(user)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
 
     @action(
         detail=False,
@@ -164,17 +109,14 @@ class UserViewSet(
         )
 
 
-class JWTView(
-    mixins.CreateModelMixin,
-    viewsets.GenericViewSet
-):
+class JWTView(views.APIView):
     """Вьюсет для получения пользователем JWT токена."""
 
     queryset = User.objects.all()
     serializer_class = JWTSerializer
     permission_classes = (permissions.AllowAny,)
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request):
         """Предоставляет пользователю JWT токен по коду подтверждения."""
         serializer = JWTSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -188,6 +130,11 @@ class JWTView(
         message = {'token': str(AccessToken.for_user(user))}
         return Response(message, status=status.HTTP_200_OK)
 
+      
+class GenreViewSet(CreateListDestroyViewSet):
+    """Получить список всех жанров.Права доступа:Доступно без токена."""
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
 
 class BaseCreateListDestroyViewSet(viewsets.ModelViewSet):
     """Общий базовый вьюсет для создания и удаления объектов."""
@@ -257,6 +204,7 @@ class ReviewViewSet(ModelViewSet):
 
     serializer_class = serializers.ReviewSerializer
     permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
         IsAuthorModeratorAdminSuperUserOrReadOnly,
     )
     http_method_names = (

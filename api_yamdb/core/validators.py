@@ -4,15 +4,20 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
 
 from core.constants import MAX_LENGTH_USERNAME
+from core.constants import (
+    FORBIDDEN_NAMES,
+    USERNAME_REGEX
+)
 
 
-def username_me(value):
+def username_validator(username):
     """Проверка имени пользователя (me недопустимое имя)."""
-    if value == 'me':
-        raise ValidationError(
-            'Имя пользователя "me" не разрешено.'
-        )
-    return value
+    if username in FORBIDDEN_NAMES:
+       raise ValidationError(
+           f'Имя пользователя `{username}` недопустимо.',
+       )
+    return username
+
 
 
 def validate_year(value):
@@ -27,12 +32,13 @@ def validate_year(value):
 class UsernameRegexValidator(UnicodeUsernameValidator):
     """Валидация имени пользователя."""
 
-    regex = r'^[\w.@+-]+\Z'
+    regex = USERNAME_REGEX
     flags = 0
     max_length = MAX_LENGTH_USERNAME
-    message = (f'Введите правильное имя пользователя. Оно может содержать'
-               f' только буквы, цифры и знаки @/./+/-/_.'
-               f' Длина не более {MAX_LENGTH_USERNAME} символов')
+    message = ('Введите правильное имя пользователя. Оно может содержать'
+               ' только буквы, цифры и знаки @/./+/-/_.'
+               f' Длина не более {MAX_LENGTH_USERNAME} символов'
+    )
     error_messages = {
         'invalid': f'Набор символов не более {MAX_LENGTH_USERNAME}. '
                    'Только буквы, цифры и @/./+/-/_',
