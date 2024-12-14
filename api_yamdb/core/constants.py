@@ -20,8 +20,7 @@ USER_ROLES = {
 
 # Тема письма при отправки токена
 CONFIRM_CODE_MESSAGE = 'Код для подтверждения регистрации на api_yamdb'
-# Константа для пути к данным
-CSV_DATA_PATH = '/static/data/'
+
 
 ADDITIONAL_USER_FIElDS = (
     (None, {
