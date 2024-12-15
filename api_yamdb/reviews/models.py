@@ -78,7 +78,6 @@ class Category(BaseGenreAndCategoryModel):
     class Meta(BaseGenreAndCategoryModel.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
-        default_related_name = 'categories'
 
     def __str__(self):
         return self.name
@@ -90,7 +89,6 @@ class Genre(BaseGenreAndCategoryModel):
     class Meta(BaseGenreAndCategoryModel.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
-        default_related_name = 'genres'
 
     def __str__(self):
         return self.name
@@ -104,7 +102,7 @@ class Title(models.Model):
         max_length=LENG_MAX,
         db_index=True,
     )
-    year = models.PositiveSmallIntegerField(
+    year = models.IntegerField(
         'Год выпуска',
         db_index=True,
         validators=(validate_year,),

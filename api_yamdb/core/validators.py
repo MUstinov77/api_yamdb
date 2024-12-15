@@ -13,11 +13,10 @@ from core.constants import (
 def username_validator(username):
     """Проверка имени пользователя (me недопустимое имя)."""
     if username in FORBIDDEN_NAMES:
-       raise ValidationError(
-           f'Имя пользователя `{username}` недопустимо.',
-       )
+        raise ValidationError(
+            f'Имя пользователя `{username}` недопустимо.',
+        )
     return username
-
 
 
 def validate_year(value):
@@ -37,8 +36,7 @@ class UsernameRegexValidator(UnicodeUsernameValidator):
     max_length = MAX_LENGTH_USERNAME
     message = ('Введите правильное имя пользователя. Оно может содержать'
                ' только буквы, цифры и знаки @/./+/-/_.'
-               f' Длина не более {MAX_LENGTH_USERNAME} символов'
-    )
+               f' Длина не более {MAX_LENGTH_USERNAME} символов')
     error_messages = {
         'invalid': f'Набор символов не более {MAX_LENGTH_USERNAME}. '
                    'Только буквы, цифры и @/./+/-/_',

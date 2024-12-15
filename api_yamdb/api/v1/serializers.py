@@ -10,7 +10,8 @@ from rest_framework.serializers import (
 
 from core.constants import (
     MAX_LENGTH_EMAIL,
-    MAX_LENGTH_USERNAME
+    MAX_LENGTH_USERNAME,
+    RATING_DEFAULT_VALUE
 )
 from core.utils import send_confirmation_code
 from core.validators import (
@@ -25,7 +26,6 @@ from reviews.models import (
     Title
 )
 from users.models import User
-
 
 
 class UserCreateSerializer(ModelSerializer):
@@ -50,7 +50,6 @@ class UserCreateSerializer(ModelSerializer):
             'email'
         )
 
-
     def create(self, validated_data):
         user, _ = User.objects.get_or_create(**validated_data)
         confirmation_code = default_token_generator.make_token(user)
@@ -71,15 +70,18 @@ class UserCreateSerializer(ModelSerializer):
         return attrs
 
 
-
-
 class UserSerializer(ModelSerializer):
 
     class Meta:
         model = User
         fields = (
-            'username', 'email', 'first_name',
-            'last_name', 'bio', 'role')
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
 
 
 class JWTSerializer(Serializer):
@@ -125,7 +127,6 @@ class GenreSerializer(ModelSerializer):
     class Meta:
         model = Genre
         exclude = ('id',)
-        lookup_field = 'slug'
 
 
 class ReviewSerializer(ModelSerializer):
@@ -176,7 +177,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
     )
     rating = serializers.IntegerField(
         read_only=True,
-        default='Пока нет оценок :('
+        default=RATING_DEFAULT_VALUE
     )
 
     class Meta:
@@ -200,3 +201,5 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Title
 
+    def to_representation(self, instance):
+        return TitleReadSerializer(instance).data

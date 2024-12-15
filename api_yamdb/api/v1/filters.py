@@ -16,6 +16,12 @@ class TitleFilter(filters.FilterSet):
         field_name='name',
         lookup_expr='icontains'
     )
+
     class Meta:
         model = Title
-        fields = '__all__'
+        fields = [
+            'category',
+            'genre',
+            'name',
+            'year'
+        ]

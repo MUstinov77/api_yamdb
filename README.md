@@ -54,18 +54,47 @@
 
 Регистрация пользователя:  
 ``` POST /api/v1/auth/signup/ ```  
+```
+From: your.mail@yandex.ru
+To: user@no-admin.ru
+Date: Fri, 13 Dec 2024 18:31:07 -0000
+
+Код подтверждения: chzt3v-f39316caf5c0d8d0354d2095f1f067b0
+```
 Получение данных своей учетной записи:  
 ``` GET /api/v1/users/me/ ```  
 Добавление новой категории:  
 ``` POST /api/v1/categories/ ```  
 Удаление жанра:  
-``` DELETE /api/v1/genres/{slug} ```  
-Частичное обновление информации о произведении:  
-``` PATCH /api/v1/titles/{titles_id} ```  
+``` DELETE /api/v1/genres/{slug} ```   
 Получение списка всех отзывов:  
-``` GET /api/v1/titles/{title_id}/reviews/ ```   
+``` GET /api/v1/titles/{title_id}/reviews/ ```
+```
+{
+  "count": 0,
+  "next": "string",
+  "previous": "string",
+  "results": [
+    {
+      "id": 0,
+      "text": "string",
+      "author": "string",
+      "score": 1,
+      "pub_date": "2024-12-08T20:15:22Z"
+    }
+  ]
+}
+```
 Добавление комментария к отзыву:  
-``` POST /api/v1/titles/{title_id}/reviews/{review_id}/comments/ ```    
+``` POST /api/v1/titles/{title_id}/reviews/{review_id}/comments/ ```
+```
+{
+  "id": 0,
+  "text": "string",
+  "author": "string",
+  "pub_date": "2024-12-08T20:15:22Z"
+}
+```
 
 #### Полный список запросов API находятся в документации
 
