@@ -5,8 +5,6 @@ from django.db import models
 from core.constants import (
     FORBIDDEN_SIMBOLS_REGEX,
     MAX_LENGTH_EMAIL,
-    MAX_LENGTH_FIRSTNAME,
-    MAX_LENGTH_LASTNAME,
     MAX_LENGTH_USERNAME,
     USER_ROLES
 )
@@ -57,7 +55,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-
 
     @property
     def is_moderator(self):

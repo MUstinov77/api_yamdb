@@ -28,7 +28,6 @@ from reviews.models import (
 from users.models import User
 
 
-
 class UserCreateSerializer(ModelSerializer):
     """Cериализатор для обработки данных нового пользователя."""
     username = serializers.CharField(
@@ -51,7 +50,6 @@ class UserCreateSerializer(ModelSerializer):
             'email'
         )
 
-
     def create(self, validated_data):
         user, _ = User.objects.get_or_create(**validated_data)
         confirmation_code = default_token_generator.make_token(user)
@@ -70,8 +68,6 @@ class UserCreateSerializer(ModelSerializer):
                     f'Пользователь с {attr_name} уже существует.'
                 )
         return attrs
-
-
 
 
 class UserSerializer(ModelSerializer):
@@ -207,4 +203,3 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return TitleReadSerializer(instance).data
-

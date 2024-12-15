@@ -8,7 +8,6 @@ from rest_framework import (
     viewsets,
 )
 from rest_framework.decorators import action
-from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -75,7 +74,6 @@ class UserViewSet(
         'delete',
     ]
 
-
     @action(
         detail=False,
         methods=['GET', 'PATCH'],
@@ -127,7 +125,6 @@ class JWTView(views.APIView):
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
         message = {'token': str(AccessToken.for_user(user))}
         return Response(message, status=status.HTTP_200_OK)
-
 
 
 class GenreViewSet(CreateListDestroyViewSet):
