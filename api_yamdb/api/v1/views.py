@@ -2,7 +2,6 @@ from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
-    mixins,
     permissions,
     status,
     views,
@@ -33,7 +32,6 @@ from api.v1.serializers import (
     UserCreateSerializer,
     UserSerializer
 )
-from core.utils import send_confirmation_code
 from reviews.models import (
     Category,
     Genre,
@@ -130,47 +128,22 @@ class JWTView(views.APIView):
         message = {'token': str(AccessToken.for_user(user))}
         return Response(message, status=status.HTTP_200_OK)
 
-      
+
+
 class GenreViewSet(CreateListDestroyViewSet):
     """Получить список всех жанров.Права доступа:Доступно без токена."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-
-class BaseCreateListDestroyViewSet(viewsets.ModelViewSet):
-    """Общий базовый вьюсет для создания и удаления объектов."""
-
     permission_classes = (IsAdminUserOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-
-    def retrieve(self, request, *args, **kwargs):
-        # Запрещает доступ к отдельным объектам (GET)
-        raise MethodNotAllowed(
-            'GET',
-            detail='Получение отдельных объектов не разрешено.'
-        )
-
-    def partial_update(self, request, *args, **kwargs):
-        # Запрещает доступ к отдельным объектам (PATCH)
-        raise MethodNotAllowed(
-            'PATCH',
-            detail='Обновление отдельных объектов не разрешено.'
-        )
 
 
-class GenreViewSet(BaseCreateListDestroyViewSet):
-    """Получить список всех жанров.Права доступа:Доступно без токена."""
-
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
-
-
-class CategoriesViewSet(BaseCreateListDestroyViewSet):
+class CategoriesViewSet(CreateListDestroyViewSet):
     """Получить список всех категорий.Права доступа:Доступно без токена."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (IsAdminUserOrReadOnly,)
 
 
 class TitleViewSet(ModelViewSet):
@@ -190,9 +163,7 @@ class TitleViewSet(ModelViewSet):
     )
 
     def get_serializer_class(self):
-        # Не менять на permissions.SAFE_METHODS.
-        # Ломает ответы в полях category и genre на другие.
-        if self.action in ('retrieve', 'list'):
+        if self.action in permissions.SAFE_METHODS:
             return TitleReadSerializer
         return TitleWriteSerializer
 

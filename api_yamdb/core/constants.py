@@ -38,3 +38,5 @@ USERNAME_REGEX = r'^[\w.@+-]+\Z'
 FORBIDDEN_NAMES = (
     'me',
 )
+
+RATING_DEFAULT_VALUE = 1
