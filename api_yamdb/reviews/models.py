@@ -10,7 +10,8 @@ from core.constants import (
     LENG_MAX,
     LENG_SLUG,
     MAX_SCORE,
-    MIN_SCORE
+    MIN_SCORE,
+    RATING_DEFAULT_VALUE
 )
 from core.validators import validate_year
 from users.models import User
@@ -151,7 +152,7 @@ class Review(BaseAuthorModel):
         error_messages={
             'validators': f'Оценка от {MIN_SCORE} до {MAX_SCORE}!'
         },
-        default=1,
+        default=RATING_DEFAULT_VALUE,
     )
 
     class Meta(BaseAuthorModel.Meta):
