@@ -30,6 +30,7 @@ from users.models import User
 
 class UserCreateSerializer(ModelSerializer):
     """Cериализатор для обработки данных нового пользователя."""
+
     username = serializers.CharField(
         required=True,
         max_length=MAX_LENGTH_USERNAME,
@@ -106,7 +107,7 @@ class JWTSerializer(Serializer):
             raise serializers.ValidationError(
                 'Неверный код подтверждения.'
             )
-        elif not username_validator(username):
+        if not username_validator(username):
             raise serializers.ValidationError(
                 'Неверное имя пользователя.'
             )

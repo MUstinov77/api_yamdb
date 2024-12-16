@@ -3,10 +3,10 @@ from datetime import datetime
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
 
-from core.constants import MAX_LENGTH_USERNAME
 from core.constants import (
     FORBIDDEN_NAMES,
-    USERNAME_REGEX
+    FORBIDDEN_SIMBOLS_REGEX,
+    MAX_LENGTH_USERNAME
 )
 
 
@@ -31,7 +31,7 @@ def validate_year(value):
 class UsernameRegexValidator(UnicodeUsernameValidator):
     """Валидация имени пользователя."""
 
-    regex = USERNAME_REGEX
+    regex = FORBIDDEN_SIMBOLS_REGEX
     flags = 0
     max_length = MAX_LENGTH_USERNAME
     message = ('Введите правильное имя пользователя. Оно может содержать'

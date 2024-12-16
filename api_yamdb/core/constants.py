@@ -31,8 +31,6 @@ ADDITIONAL_USER_FIElDS = (
 
 FORBIDDEN_SIMBOLS_REGEX = r'^[\w.@+-]+$'
 
-USERNAME_REGEX = r'^[\w.@+-]+\Z'
-
 FORBIDDEN_NAMES = (
     'me',
 )
