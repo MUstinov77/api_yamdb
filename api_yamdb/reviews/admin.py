@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin import display
 
 from reviews.models import (
     Category,
@@ -16,11 +17,10 @@ class TitleAdmin(admin.ModelAdmin):
     list_filter = ('category', 'genre')
     list_editable = ('category',)
 
+    @display(description='Жанр(ы)')
     def get_genre(self, obj):
         """Получает жанр или список жанров произведения."""
         return ', '.join((genre.name for genre in obj.genre.all()))
-
-    get_genre.short_description = 'Жанр(ы)'
 
 
 @admin.register(Category)
