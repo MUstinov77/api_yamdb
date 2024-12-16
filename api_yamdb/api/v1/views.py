@@ -132,7 +132,6 @@ class GenreViewSet(CreateListDestroyViewSet):
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminUserOrReadOnly,)
 
 
 class CategoriesViewSet(CreateListDestroyViewSet):
@@ -140,7 +139,6 @@ class CategoriesViewSet(CreateListDestroyViewSet):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminUserOrReadOnly,)
 
 
 class TitleViewSet(ModelViewSet):
