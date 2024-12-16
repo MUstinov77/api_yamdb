@@ -199,9 +199,7 @@ class ReviewViewSet(ModelViewSet):
 
 
 class CommentViewSet(ModelViewSet):
-    """
-    Управление комментариями.
-    """
+    """Управление комментариями."""
 
     serializer_class = serializers.CommentSerializer
     permission_classes = (IsAuthorModeratorAdminSuperUserOrReadOnly,)

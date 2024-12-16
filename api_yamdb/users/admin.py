@@ -11,4 +11,3 @@ class AdminUser(BaseUserAdmin):
 
     add_fieldsets = BaseUserAdmin.add_fieldsets + ADDITIONAL_USER_FIElDS
     fieldsets = BaseUserAdmin.fieldsets + ADDITIONAL_USER_FIElDS
-
