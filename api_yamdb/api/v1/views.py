@@ -10,7 +10,6 @@ from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 

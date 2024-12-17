@@ -3,7 +3,6 @@ MAX_LENGTH_USERNAME = 150
 MAX_LENGTH_EMAIL = 254
 
 # Константы для остальных моделей
-LENG_SLUG = 50
 LENG_MAX = 256
 LENG_CUT = 30
 MIN_SCORE = 1

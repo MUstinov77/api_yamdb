@@ -7,7 +7,6 @@ from django.db import models
 from core.constants import (
     LENG_CUT,
     LENG_MAX,
-    LENG_SLUG,
     MAX_SCORE,
     MIN_SCORE,
     RATING_DEFAULT_VALUE
