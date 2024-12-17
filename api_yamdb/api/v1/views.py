@@ -115,14 +115,7 @@ class JWTView(views.APIView):
     def post(self, request):
         """Предоставляет пользователю JWT токен по коду подтверждения."""
         serializer = JWTSerializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError:
-            message = 'Неверный код подтверждения.'
-            return Response(
-                {'confirmation_code': message},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        serializer.is_valid(raise_exception=True)
         username = serializer.validated_data.get('username')
         user = get_object_or_404(User, username=username)
         message = {'token': str(AccessToken.for_user(user))}
@@ -173,7 +166,7 @@ class ReviewViewSet(ModelViewSet):
     serializer_class = serializers.ReviewSerializer
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
-        IsAuthorModeratorAdminSuperUserOrReadOnly,
+        IsAuthorModeratorAdminSuperUserOrReadOnly
     )
     http_method_names = (
         'get',
@@ -202,7 +195,10 @@ class CommentViewSet(ModelViewSet):
     """Управление комментариями."""
 
     serializer_class = serializers.CommentSerializer
-    permission_classes = (IsAuthorModeratorAdminSuperUserOrReadOnly,)
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        IsAuthorModeratorAdminSuperUserOrReadOnly
+    )
     http_method_names = (
         'get',
         'post',
