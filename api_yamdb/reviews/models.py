@@ -1,7 +1,6 @@
 from django.core.validators import (
     MaxValueValidator,
-    MinValueValidator,
-    validate_slug
+    MinValueValidator
 )
 from django.db import models
 
@@ -26,9 +25,7 @@ class BaseGenreAndCategoryModel(models.Model):
 
     slug = models.SlugField(
         'Slug',
-        max_length=LENG_SLUG,
         unique=True,
-        validators=[validate_slug],
     )
     name = models.CharField(
         'Название',
